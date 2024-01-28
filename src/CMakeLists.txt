@@ -2,10 +2,12 @@
 
 target_sources( ${PROJECT_NAME}
     PRIVATE
-        Example.h
-        Example.cpp
-        GDExtensionTemplate.h
-        GDExtensionTemplate.cpp
+        GD3DTileset.h
+        GD3DTileset.cpp
+#        Example.h
+#        Example.cpp
+#        GDExtensionTemplate.h
+#        GDExtensionTemplate.cpp
         RegisterExtension.cpp
 )
 

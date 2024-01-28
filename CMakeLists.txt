@@ -27,7 +27,7 @@ if ( APPLE )
 endif()
 
 # Main project information
-project( GDExtensionTemplate
+project( GDCesium
     LANGUAGES
         CXX
     VERSION
@@ -140,3 +140,28 @@ target_link_libraries( ${PROJECT_NAME}
     PRIVATE
         godot-cpp
 )
+
+set(CESIUM_TESTS_ENABLED OFF)
+set(BUILD_SHARED_LIB OFF)
+
+add_subdirectory( extern/cesium-native )
+
+target_link_libraries( ${PROJECT_NAME}
+    PRIVATE
+        Cesium3DTiles
+        Cesium3DTilesContent
+        Cesium3DTilesReader
+        Cesium3DTilesSelection
+        Cesium3DTilesWriter
+        CesiumAsync
+        CesiumGeometry
+        CesiumGeospatial
+        CesiumGltf
+        CesiumGltfReader
+        CesiumGltfWriter
+        CesiumIonClient
+        CesiumJsonReader
+        CesiumJsonWriter
+        CesiumUtility
+)
+

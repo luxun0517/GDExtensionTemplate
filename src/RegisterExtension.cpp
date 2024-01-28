@@ -6,12 +6,14 @@
 #include "godot_cpp/core/defs.hpp"
 #include "godot_cpp/godot.hpp"
 
-#include "Example.h"
-#include "GDExtensionTemplate.h"
+#include "GD3DTileset.h"
+//#include "Example.h"
+//#include "GDExtensionTemplate.h"
 
 /// @file
 /// Register our classes with Godot.
 
+using namespace Cesium;
 namespace
 {
     /// @brief Called by Godot to let us register our classes with Godot.
@@ -26,13 +28,14 @@ namespace
             return;
         }
 
-        godot::ClassDB::register_class<ExampleRef>();
-        godot::ClassDB::register_class<ExampleMin>();
-        godot::ClassDB::register_class<Example>();
-        godot::ClassDB::register_class<ExampleVirtual>( true );
-        godot::ClassDB::register_abstract_class<ExampleAbstract>();
-
-        godot::ClassDB::register_class<GDExtensionTemplate>();
+        godot::ClassDB::register_class<GD3DTileset>();
+//        godot::ClassDB::register_class<ExampleRef>();
+//        godot::ClassDB::register_class<ExampleMin>();
+//        godot::ClassDB::register_class<Example>();
+//        godot::ClassDB::register_class<ExampleVirtual>( true );
+//        godot::ClassDB::register_abstract_class<ExampleAbstract>();
+//
+//        godot::ClassDB::register_class<GDExtensionTemplate>();
     }
 
     /// @brief Called by Godot to let us do any cleanup.
@@ -59,7 +62,7 @@ extern "C"
     /// @param r_initialization the intialization (need more info)
     ///
     /// @returns GDExtensionBool
-    GDExtensionBool GDE_EXPORT GDExtensionInit(
+    GDExtensionBool GDE_EXPORT GDCesiumInit(
         GDExtensionInterfaceGetProcAddress p_get_proc_address, GDExtensionClassLibraryPtr p_library,
         GDExtensionInitialization *r_initialization )
     {
