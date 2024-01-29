@@ -31,11 +31,25 @@ namespace Cesium {
 
     void GD3DTileset::Update( double delta )
 	{
+
+        if ( !this->_pTileset )
+        {
+            this->LoadTileset();
+            if ( !this->_pTileset )
+            {
+                return;
+            }
+        }
 		
 	}
 
 	void GD3DTileset::LoadTileset()
     {
+        if ( this->_pTileset )
+        {
+            // Tileset already loaded, do nothing.
+            return;
+        }
     }
 
 	void GD3DTileset::_bind_methods() {
