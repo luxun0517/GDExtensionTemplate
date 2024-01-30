@@ -5,7 +5,7 @@
 #include "GD3DTileset.h"
 #include <godot_cpp/core/class_db.hpp>
 
-namespace Cesium {
+namespace CesiumForGodot {
 
 	GD3DTileset::GD3DTileset() {
 
@@ -16,7 +16,7 @@ namespace Cesium {
 	}
 		
 	/// <summary>
-    /// ÉèÖÃ3dtilesetµÄurl
+    /// ï¿½ï¿½ï¿½ï¿½3dtilesetï¿½ï¿½url
     /// </summary>
     /// <param name="url"></param>
     void GD3DTileset::set_url( String url )
@@ -26,7 +26,7 @@ namespace Cesium {
 
     void GD3DTileset::Start()
 	{
-		
+
 	}
 
     void GD3DTileset::Update( double delta )
@@ -57,8 +57,10 @@ namespace Cesium {
         ClassDB::bind_method( D_METHOD( "get_url" ), &GD3DTileset::get_url);
 
 		ADD_GROUP( "Renderer", "render_" );
-        ADD_PROPERTY( PropertyInfo( Variant::STRING, "Tileset Url", PROPERTY_HINT_TYPE_STRING ),
+        ADD_PROPERTY( PropertyInfo( Variant::STRING, "URL", PROPERTY_HINT_TYPE_STRING ),
                       "set_url", "get_url" );
+
+        ADD_GROUP( "Level of Detail", "level of detail" );
 	}
 
 	void GD3DTileset::_notification(int p_what) {

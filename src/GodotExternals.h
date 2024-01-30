@@ -5,15 +5,19 @@
 #ifndef GDCESIUM_GODOTEXTERNALS_H
 #define GDCESIUM_GODOTEXTERNALS_H
 
+#include <memory>
+
 namespace CesiumAsync {
     class AsyncSystem;
     class IAssetAccessor;
+}
 
-    namespace Cesium {
-        class GodotExternals {
+namespace CesiumForGodot {
 
-        };
-    }
-} // Cesium
+    const std::shared_ptr<CesiumAsync::IAssetAccessor>& getAssetAccessor();
+
+    const CesiumAsync::AsyncSystem& getAsyncSystem();
+}
+
 
 #endif //GDCESIUM_GODOTEXTERNALS_H

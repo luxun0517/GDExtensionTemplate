@@ -9,7 +9,7 @@
 #include "Cesium3DTilesSelection/Tileset.h"
 
 using namespace godot;
-namespace Cesium {
+namespace CesiumForGodot {
 
     class GD3DTileset : public Node3D {
         GDCLASS(GD3DTileset, Node3D);

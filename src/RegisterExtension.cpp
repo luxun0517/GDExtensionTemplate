@@ -13,7 +13,7 @@
 /// @file
 /// Register our classes with Godot.
 
-using namespace Cesium;
+using namespace CesiumForGodot;
 namespace
 {
     /// @brief Called by Godot to let us register our classes with Godot.
