@@ -5,6 +5,14 @@ target_sources( ${PROJECT_NAME}
         constants.h
         TestRendering.h
         TestRendering.cpp
+        CameraManager.h
+        CameraManager.cpp
+        CesiumGeoreference.h
+        CesiumGeoreference.cpp
+        CesiumShaderProperties.h
+        CesiumShaderProperties.cpp
+        GodotPrepareRendererResources.h
+        GodotPrepareRendererResources.cpp
 #        GD3DTileset.h
 #        GD3DTileset.cpp
 #        Cesium.h
