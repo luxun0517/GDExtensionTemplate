@@ -2,14 +2,17 @@
 
 target_sources( ${PROJECT_NAME}
     PRIVATE
-        GD3DTileset.h
-        GD3DTileset.cpp
-        Cesium.h
-        Cesium.cpp
-        GodotAssetAccessor.h
-        GodotAssetAccessor.cpp
-        GodotExternals.h
-        GodotExternals.cpp
+        constants.h
+        TestRendering.h
+        TestRendering.cpp
+#        GD3DTileset.h
+#        GD3DTileset.cpp
+#        Cesium.h
+#        Cesium.cpp
+#        GodotAssetAccessor.h
+#        GodotAssetAccessor.cpp
+#        GodotExternals.h
+#        GodotExternals.cpp
         RegisterExtension.cpp
 )
 

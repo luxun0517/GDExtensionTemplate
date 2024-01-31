@@ -6,9 +6,10 @@
 #include "godot_cpp/core/defs.hpp"
 #include "godot_cpp/godot.hpp"
 
-#include "GD3DTileset.h"
+//#include "GD3DTileset.h"
 //#include "Example.h"
 //#include "GDExtensionTemplate.h"
+#include "TestRendering.h"
 
 /// @file
 /// Register our classes with Godot.
@@ -28,7 +29,8 @@ namespace
             return;
         }
 
-        godot::ClassDB::register_class<GD3DTileset>();
+        godot::ClassDB::register_class<TestRendering>();
+//        godot::ClassDB::register_class<GD3DTileset>();
 //        godot::ClassDB::register_class<ExampleRef>();
 //        godot::ClassDB::register_class<ExampleMin>();
 //        godot::ClassDB::register_class<Example>();
