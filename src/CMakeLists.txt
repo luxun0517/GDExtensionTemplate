@@ -7,6 +7,8 @@ target_sources( ${PROJECT_NAME}
         TestRendering.cpp
         CameraManager.h
         CameraManager.cpp
+        TextureLoader.h
+        TextureLoader.cpp
         CesiumGeoreference.h
         CesiumGeoreference.cpp
         CesiumShaderProperties.h

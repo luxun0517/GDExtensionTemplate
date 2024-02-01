@@ -68,6 +68,8 @@ namespace CesiumForGodot {
         double _ecefY = 0.0;
         double _ecefZ = 0.0;
 
+        double _scale = 1.0;
+
         std::optional<CesiumGeospatial::LocalHorizontalCoordinateSystem> _coordinateSystem;
     };
 
