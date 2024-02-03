@@ -6,8 +6,12 @@
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/classes/engine.hpp>
 #include "Cesium3DTilesetLoadFailureDetails.h"
+#include "constants.h"
+#include <godot_cpp/classes/rendering_server.hpp>
 #include "GodotTilesetExternals.h"
 #include "CameraManager.h"
+#include <spdlog/spdlog.h>
+#include "GodotPrepareRendererResources.h"
 
 namespace CesiumForGodot {
 
@@ -136,6 +140,49 @@ namespace CesiumForGodot {
         _suspendUpdate = suspendUpdate;
 	}
 
+    void GD3DTileset::set_logSelectionStats( bool logSelectionStats )
+	{
+        logSelectionStats = logSelectionStats;
+	}
+
+    void GD3DTileset::updateLastViewUpdateResultState(
+        const Ref<GD3DTileset> &tileset,
+        const ViewUpdateResult &currentResult
+    )
+    {
+        if ( !tileset->get_logSelectionStats() )
+        {
+            return;
+        }
+
+        const ViewUpdateResult &previousResult = this->_lastUpdateResult;
+        if ( currentResult.tilesToRenderThisFrame.size() !=
+                 previousResult.tilesToRenderThisFrame.size() ||
+             currentResult.workerThreadTileLoadQueueLength !=
+                 previousResult.workerThreadTileLoadQueueLength ||
+             currentResult.mainThreadTileLoadQueueLength !=
+                 previousResult.mainThreadTileLoadQueueLength ||
+             currentResult.tilesVisited != previousResult.tilesVisited ||
+             currentResult.culledTilesVisited != previousResult.culledTilesVisited ||
+             currentResult.tilesCulled != previousResult.tilesCulled ||
+             currentResult.maxDepthVisited != previousResult.maxDepthVisited )
+        {
+            SPDLOG_LOGGER_INFO(
+                this->_pTileset->getExternals().pLogger,
+                "{0}: Visited {1}, Culled Visited {2}, Rendered {3}, Culled {4}, Max "
+                "Depth Visited {5}, Loading-Worker {6}, Loading-Main {7} "
+                "Total Tiles Resident {8}, Frame {9}",
+                tileset->get_name(), currentResult.tilesVisited,
+                currentResult.culledTilesVisited, currentResult.tilesToRenderThisFrame.size(),
+                currentResult.tilesCulled, currentResult.maxDepthVisited,
+                currentResult.workerThreadTileLoadQueueLength,
+                currentResult.mainThreadTileLoadQueueLength,
+                this->_pTileset->getNumberOfTilesLoaded(), currentResult.frameNumber );
+        }
+
+        this->_lastUpdateResult = currentResult;
+    }
+
     void GD3DTileset::Start()
 	{
 
@@ -177,14 +224,61 @@ namespace CesiumForGodot {
 			 }
          }
 
-         std::vector<Cesium3DTilesSelection::ViewState> viewStates =
+         std::vector<ViewState> viewStates =
              CameraManager::getAllCameras( this );
-		
+
+         const ViewUpdateResult &updateResult =
+             this->_pTileset->updateView( viewStates, delta );
+         this->updateLastViewUpdateResultState( this, updateResult );
+
+         for ( Tile *pTile : updateResult.tilesFadingOut )
+         {
+             if ( pTile->getState() != TileLoadState::Done )
+             {
+                 continue;
+             }
+
+             const Cesium3DTilesSelection::TileContent &content = pTile->getContent();
+             const Cesium3DTilesSelection::TileRenderContent *pRenderContent =
+                 content.getRenderContent();
+             if ( pRenderContent )
+             {
+                 CesiumGltfGameObject *pCesiumGameObject =
+                     static_cast<CesiumGltfGameObject *>( pRenderContent->getRenderResources() );
+                 if ( pCesiumGameObject && pCesiumGameObject->pGameObject )
+                 {
+                     //RS->free_rid( *pCesiumGameObject->pGameObject );
+                     //pCesiumGameObject->pGameObject->SetActive( false );
+                 }
+             }
+
+         }
+
+         for ( auto pTile : updateResult.tilesToRenderThisFrame )
+         {
+             if ( pTile->getState() != TileLoadState::Done )
+             {
+                 continue;
+             }
+
+             const Cesium3DTilesSelection::TileContent &content = pTile->getContent();
+             const Cesium3DTilesSelection::TileRenderContent *pRenderContent =
+                 content.getRenderContent();
+             if ( pRenderContent )
+             {
+                 CesiumGltfGameObject *pCesiumGameObject =
+                     static_cast<CesiumGltfGameObject *>( pRenderContent->getRenderResources() );
+                 if ( pCesiumGameObject && pCesiumGameObject->pGameObject )
+                 {
+                     //pCesiumGameObject->pGameObject->SetActive( true );
+                 }
+             }
+         }
 	}
 
 	void GD3DTileset::LoadTileset()
     {
-        Cesium3DTilesSelection::TilesetOptions options;
+        TilesetOptions options;
         options.maximumScreenSpaceError = this->_maximumScreenSpaceError;
         options.preloadAncestors = this->_preloadAncestors;
         options.preloadSiblings = this->_preloadSiblings;
@@ -198,7 +292,7 @@ namespace CesiumForGodot {
         options.culledScreenSpaceError = this->_culledScreenSpaceError;
         options.showCreditsOnScreen = this->_showCreditsOnScreen;
         options.loadErrorCallback =
-            [this]( const Cesium3DTilesSelection::TilesetLoadFailureDetails &details ) {
+            [this]( const TilesetLoadFailureDetails &details ) {
                 uint8_t typeValue = (uint8_t)details.type;
                 Cesium3DTilesetLoadFailureDetails godotDetails;
                 godotDetails.tileset = static_cast<Ref<GD3DTileset>>(this);
@@ -212,7 +306,7 @@ namespace CesiumForGodot {
         options.mainThreadLoadingTimeLimit = 5.0f;
         options.tileCacheUnloadTimeLimit = 5.0f;
 
-        Cesium3DTilesSelection::TilesetContentOptions contentOptions{};
+        TilesetContentOptions contentOptions{};
         contentOptions.generateMissingNormalsSmooth = this->_generateSmoothNormals;
 
         CesiumGltf::SupportedGpuCompressedPixelFormats supportedFormats;
@@ -233,7 +327,7 @@ namespace CesiumForGodot {
 
         options.contentOptions = contentOptions;
 
-        this->_lastUpdateResult = Cesium3DTilesSelection::ViewUpdateResult();
+        this->_lastUpdateResult = ViewUpdateResult();
 
         if ( TilesetSource == TilesetSource::FromCesiumIon )
         {
@@ -241,7 +335,7 @@ namespace CesiumForGodot {
         }
         else
         {
-            this->_pTileset = std::make_unique<Cesium3DTilesSelection::Tileset>( 
+            this->_pTileset = std::make_unique<Tileset>( 
                 createTilesetExternals(this), 
                 this->_url.utf8(),
                 options

@@ -10,6 +10,7 @@
 #include <Cesium3DTilesSelection/ViewUpdateResult.h>
 #include "CesiumCreditSystem.h"
 
+using namespace Cesium3DTilesSelection;
 using namespace godot;
 namespace CesiumForGodot {
 
@@ -55,6 +56,8 @@ namespace CesiumForGodot {
 
         bool _destroyTilesetOnNextUpdate;
 
+        bool _logSelectionStats = false;
+
         std::unique_ptr<Cesium3DTilesSelection::Tileset> _pTileset;
         Cesium3DTilesSelection::ViewUpdateResult _lastUpdateResult;
 
@@ -67,6 +70,11 @@ namespace CesiumForGodot {
         void Update( double delta );
 
         void LoadTileset();
+
+        void updateLastViewUpdateResultState( 
+            const Ref<GD3DTileset> &tileset,
+            const Cesium3DTilesSelection::ViewUpdateResult &currentResult
+        );
 
     public:
         GD3DTileset();
@@ -162,6 +170,12 @@ namespace CesiumForGodot {
         {
             return _suspendUpdate;
         }
+
+        void set_logSelectionStats( bool logSelectionStats );
+        bool get_logSelectionStats()
+		{
+			return _logSelectionStats;
+		}
 
     protected:
         void DestroyTileset();

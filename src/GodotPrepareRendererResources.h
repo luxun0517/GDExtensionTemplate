@@ -35,7 +35,7 @@ namespace CesiumForGodot {
         std::unordered_map<uint32_t, uint32_t> rasterOverlayUvIndexMap{};
     };
 
-    struct CesiumGltfRID
+    struct CesiumGltfGameObject
     {
         std::unique_ptr<RID> pGameObject{};
         std::vector<CesiumPrimitiveInfo> primitiveInfos{};
