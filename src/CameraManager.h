@@ -6,7 +6,8 @@
 #define GODOT_CAMERAMANAGER_H
 
 #include <Cesium3DTilesSelection/ViewState.h>
-#include <godot_cpp/variant/rid.hpp>
+#include <godot_cpp/classes/camera3d.hpp>
+#include "GD3DTileset.h"
 
 using namespace godot;
 namespace CesiumForGodot {
@@ -14,8 +15,9 @@ namespace CesiumForGodot {
     class CameraManager {
 
     public:
-      /*  static std::vector<Cesium3DTilesSelection::ViewState> getAllCameras(
-            const RID &context );*/
+
+        static std::vector<Cesium3DTilesSelection::ViewState> getAllCameras(
+            const Ref<GD3DTileset> &context );
     };
 
     

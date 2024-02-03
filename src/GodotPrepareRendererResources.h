@@ -7,7 +7,8 @@
 
 #include <Cesium3DTilesSelection/IPrepareRendererResources.h>
 #include "CesiumShaderProperties.h"
-#include <godot_cpp/variant/rid.hpp>
+//#include <godot_cpp/variant/rid.hpp>
+#include "GD3DTileset.h"
 
 namespace CesiumForGodot {
 
@@ -43,10 +44,10 @@ namespace CesiumForGodot {
     class GodotPrepareRendererResources : public Cesium3DTilesSelection::IPrepareRendererResources {
 
     public:
-        GodotPrepareRendererResources(const RID &tileset);
+        GodotPrepareRendererResources( const Ref<GD3DTileset> &tileset );
 
     private:
-        RID _tileset;
+        Ref<GD3DTileset> _tileset;
         CesiumShaderProperties _shaderProperty;
     };
 

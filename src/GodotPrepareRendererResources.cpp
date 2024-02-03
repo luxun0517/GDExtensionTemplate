@@ -6,7 +6,8 @@
 
 namespace CesiumForGodot {
 
-    GodotPrepareRendererResources::GodotPrepareRendererResources( const RID &tileset )
+    GodotPrepareRendererResources::GodotPrepareRendererResources(
+        const Ref<GD3DTileset> &tileset )
     : _tileset(tileset), _shaderProperty() {}
 
 

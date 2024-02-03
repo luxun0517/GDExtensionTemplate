@@ -4,6 +4,10 @@
 
 #include "GD3DTileset.h"
 #include <godot_cpp/core/class_db.hpp>
+#include <godot_cpp/classes/engine.hpp>
+#include "Cesium3DTilesetLoadFailureDetails.h"
+#include "GodotTilesetExternals.h"
+#include "CameraManager.h"
 
 namespace CesiumForGodot {
 
@@ -14,15 +18,123 @@ namespace CesiumForGodot {
 	GD3DTileset::~GD3DTileset() {
 
 	}
+
+    void GD3DTileset::RecreateTileset()
+    {
+        this->DestroyTileset();
+	}
+
+    void GD3DTileset::DestroyTileset()
+    {
+        WARN_PRINT( "DestroyTileset" );
+        //// Remove any existing raster overlays
+        //System::Array1<CesiumForUnity::CesiumRasterOverlay> overlays =
+        //    tileset.gameObject().GetComponents<CesiumForUnity::CesiumRasterOverlay>();
+        //for ( int32_t i = 0, len = overlays.Length(); i < len; ++i )
+        //{
+        //    CesiumForUnity::CesiumRasterOverlay overlay = overlays[i];
+        //    overlay.RemoveFromTileset();
+        //}
+
+        this->_pTileset.reset();
+	}
 		
 	/// <summary>
-    /// ����3dtileset��url
+    /// 设置3dtileset url
     /// </summary>
     /// <param name="url"></param>
     void GD3DTileset::set_url( String url )
     {
         _url = url;
+        this->RecreateTileset();
     }
+
+    void GD3DTileset::set_maximumScreenSpaceError( float maximumScreenSpaceError )
+    {
+        _maximumScreenSpaceError = maximumScreenSpaceError;
+        this->RecreateTileset();
+    }
+
+    void GD3DTileset::set_preloadAncestors( bool preloadAncestors )
+	{
+		_preloadAncestors = preloadAncestors;
+		this->RecreateTileset();
+	}
+
+    void GD3DTileset::set_forbidHoles( bool forbidHoles )
+    {
+        _forbidHoles = forbidHoles;
+		this->RecreateTileset();
+    }
+
+    void GD3DTileset::set_maximumSimultaneousTileLoads( uint32_t maximumSimultaneousTileLoads )
+    {
+        _maximumSimultaneousTileLoads = maximumSimultaneousTileLoads;
+        this->RecreateTileset();
+    }
+
+    void GD3DTileset::set_maximumCachedBytes( long maximumCachedBytes )
+	{
+		_maximumCachedBytes = maximumCachedBytes;
+		this->RecreateTileset();
+	}
+
+    void GD3DTileset::set_loadingDescendantLimit( uint32_t loadingDescendantLimit )
+	{
+		_loadingDescendantLimit = loadingDescendantLimit;
+		this->RecreateTileset();
+	}
+
+    void GD3DTileset::set_enableFrustumCulling( bool enableFrustumCulling )
+    {
+        _enableFrustumCulling = enableFrustumCulling;
+		this->RecreateTileset();
+    }
+
+    void GD3DTileset::set_enableFogCulling( bool enableFogCulling )
+    {
+        _enableFogCulling = enableFogCulling;
+        this->RecreateTileset();
+    }
+
+    void GD3DTileset::set_enforceCulledScreenSpaceError(bool enforceCulledScreenSpaceError)
+	{
+		_enforceCulledScreenSpaceError = enforceCulledScreenSpaceError;
+		this->RecreateTileset();
+	}
+
+    void GD3DTileset::set_culledScreenSpaceError( float culledScreenSpaceError )
+	{
+		_culledScreenSpaceError = culledScreenSpaceError;
+		this->RecreateTileset();
+	}
+
+    void GD3DTileset::set_showCreditsOnScreen( bool showCreditsOnScreen )
+	{
+		_showCreditsOnScreen = showCreditsOnScreen;
+        WARN_PRINT( "SetShowCreditsOnScreen" );
+       /* this.SetShowCreditsOnScreen( this._showCreditsOnScreen );
+        if ( Cesium3DTileset.OnSetShowCreditsOnScreen != null )
+        {
+            Cesium3DTileset.OnSetShowCreditsOnScreen();
+        }*/
+	}
+
+    void GD3DTileset::set_generateSmoothNormals( bool generateSmoothNormals )
+    {
+        _generateSmoothNormals = generateSmoothNormals;
+		this->RecreateTileset();
+    }
+
+    void GD3DTileset::setCreditSystem( CesiumCreditSystem *NewCreditSystem )
+    {
+        _creditSystem = NewCreditSystem;
+    }
+
+    void GD3DTileset::set_suspendUpdate( bool suspendUpdate )
+	{
+        _suspendUpdate = suspendUpdate;
+	}
 
     void GD3DTileset::Start()
 	{
@@ -31,6 +143,16 @@ namespace CesiumForGodot {
 
     void GD3DTileset::Update( double delta )
 	{
+        if ( this->get_suspendUpdate() )
+        {
+            return;
+        }
+
+        if ( this->_destroyTilesetOnNextUpdate )
+        {
+			this->_destroyTilesetOnNextUpdate = false;
+            this->DestroyTileset();
+        }
 
         if ( !this->_pTileset )
         {
@@ -40,16 +162,119 @@ namespace CesiumForGodot {
                 return;
             }
         }
+
+         if ( Engine::get_singleton()->is_editor_hint() )
+         {
+             WARN_PRINT( "Editor" );
+         }
+
+         if ( !this->_pTileset )
+         {
+             this->LoadTileset();
+             if (!this->_pTileset )
+			 {
+				 return;
+			 }
+         }
+
+         std::vector<Cesium3DTilesSelection::ViewState> viewStates =
+             CameraManager::getAllCameras( this );
 		
 	}
 
 	void GD3DTileset::LoadTileset()
     {
-        if ( this->_pTileset )
+        Cesium3DTilesSelection::TilesetOptions options;
+        options.maximumScreenSpaceError = this->_maximumScreenSpaceError;
+        options.preloadAncestors = this->_preloadAncestors;
+        options.preloadSiblings = this->_preloadSiblings;
+        options.forbidHoles = this->_forbidHoles;
+        options.maximumSimultaneousTileLoads = this->_maximumSimultaneousTileLoads;
+        options.maximumCachedBytes = this->_maximumCachedBytes;
+        options.loadingDescendantLimit = this->_loadingDescendantLimit;
+        options.enableFrustumCulling = this->_enableFrustumCulling;
+        options.enableFogCulling = this->_enableFogCulling;
+        options.enforceCulledScreenSpaceError = this->_enforceCulledScreenSpaceError;
+        options.culledScreenSpaceError = this->_culledScreenSpaceError;
+        options.showCreditsOnScreen = this->_showCreditsOnScreen;
+        options.loadErrorCallback =
+            [this]( const Cesium3DTilesSelection::TilesetLoadFailureDetails &details ) {
+                uint8_t typeValue = (uint8_t)details.type;
+                Cesium3DTilesetLoadFailureDetails godotDetails;
+                godotDetails.tileset = static_cast<Ref<GD3DTileset>>(this);
+                godotDetails.type = Cesium3DTilesetLoadType( typeValue );
+                godotDetails.httpStatusCode = details.statusCode;
+                godotDetails.message = details.message.c_str();
+
+			    WARN_PRINT( "LoadErrorCallback" );
+		    };
+
+        options.mainThreadLoadingTimeLimit = 5.0f;
+        options.tileCacheUnloadTimeLimit = 5.0f;
+
+        Cesium3DTilesSelection::TilesetContentOptions contentOptions{};
+        contentOptions.generateMissingNormalsSmooth = this->_generateSmoothNormals;
+
+        CesiumGltf::SupportedGpuCompressedPixelFormats supportedFormats;
+        supportedFormats.ETC2_RGBA = true;
+        supportedFormats.ETC1_RGB = true;
+        supportedFormats.BC1_RGB = true;
+        supportedFormats.BC3_RGBA = true;
+        supportedFormats.BC4_R = true;
+        supportedFormats.BC5_RG = true;
+        supportedFormats.BC7_RGBA = true;
+        supportedFormats.ASTC_4x4_RGBA = true;
+        supportedFormats.PVRTC1_4_RGB = true;
+        supportedFormats.ETC2_EAC_R11 = true;
+        supportedFormats.ETC2_EAC_RG11 = true;
+
+        contentOptions.ktx2TranscodeTargets =
+            CesiumGltf::Ktx2TranscodeTargets( supportedFormats, false );
+
+        options.contentOptions = contentOptions;
+
+        this->_lastUpdateResult = Cesium3DTilesSelection::ViewUpdateResult();
+
+        if ( TilesetSource == TilesetSource::FromCesiumIon )
         {
-            // Tileset already loaded, do nothing.
-            return;
+            WARN_PRINT( "FromCesiumIon" );
         }
+        else
+        {
+            this->_pTileset = std::make_unique<Cesium3DTilesSelection::Tileset>( 
+                createTilesetExternals(this), 
+                this->_url.utf8(),
+                options
+            );
+        }
+
+        // 添加 overlay
+        WARN_PRINT( "TODO: Add any overlay components" );
+      /*  System::Array1<CesiumForUnity::CesiumRasterOverlay> overlays =
+            tileset.gameObject().GetComponents<CesiumForUnity::CesiumRasterOverlay>();
+        for ( int32_t i = 0, len = overlays.Length(); i < len; ++i )
+        {
+            CesiumForUnity::CesiumRasterOverlay overlay = overlays[i];
+            overlay.AddToTileset();
+        }*/
+        /*TypedArray<Node> descendants =
+            this->find_children( "collider_view", "MeshInstance3D" );*/
+        //this->find_children()
+        //  Add any tile excluder components
+        WARN_PRINT( "TODO: Add any tile excluder components" );
+     /*   System::Array1<CesiumForUnity::CesiumTileExcluder> excluders =
+            tileset.gameObject().GetComponentsInParent<CesiumForUnity::CesiumTileExcluder>();
+        for ( int32_t i = 0, len = excluders.Length(); i < len; ++i )
+        {
+            CesiumForUnity::CesiumTileExcluder excluder = excluders[i];
+            if ( !excluder.enabled() )
+            {
+                continue;
+            }
+
+            excluder.AddToTileset( tileset );
+        }*/
+      
     }
 
 	void GD3DTileset::_bind_methods() {

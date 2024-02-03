@@ -19,9 +19,9 @@ namespace CesiumForGodot {
 
     class TextureLoader {
     public:
-        static Ref<Texture2D> loadTexture( const CesiumGltf::ImageCesium &image );
+        //static Ref<Texture2D> loadTexture( const CesiumGltf::ImageCesium &image );
 
-        static Ref<Texture2D> loadTexture(
+      /*  static Ref<Texture2D> loadTexture(
 			const CesiumGltf::Model& model, 
             std::int32_t textureIndex
 		);
@@ -29,7 +29,7 @@ namespace CesiumForGodot {
         static Ref<Texture2D> loadTexture(
             const CesiumGltf::Model& model,
 			const CesiumGltf::Texture& texture
-        );
+        );*/
     };
 
 } // CesiumForGodot
