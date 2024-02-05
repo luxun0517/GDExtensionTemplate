@@ -247,6 +247,7 @@ namespace CesiumForGodot {
                      static_cast<CesiumGltfGameObject *>( pRenderContent->getRenderResources() );
                  if ( pCesiumGameObject && pCesiumGameObject->pGameObject )
                  {
+                     RS->instance_set_visible( *pCesiumGameObject->pGameObject, false );
                      //RS->free_rid( *pCesiumGameObject->pGameObject );
                      //pCesiumGameObject->pGameObject->SetActive( false );
                  }
@@ -270,6 +271,7 @@ namespace CesiumForGodot {
                      static_cast<CesiumGltfGameObject *>( pRenderContent->getRenderResources() );
                  if ( pCesiumGameObject && pCesiumGameObject->pGameObject )
                  {
+                     RS->instance_set_visible( *pCesiumGameObject->pGameObject, true );
                      //pCesiumGameObject->pGameObject->SetActive( true );
                  }
              }
