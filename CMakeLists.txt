@@ -118,6 +118,8 @@ include( ccache )
 # Adds a custom target to format all the code at once
 include( ClangFormat )
 
+# 设置 double 精度
+set( FLOAT_PRECISION double CACHE STRING "" )
 # godot-cpp
 # From here: https://github.com/godotengine/godot-cpp
 if ( NOT EXISTS "${CMAKE_CURRENT_LIST_DIR}/extern/godot-cpp/Makefile" )
@@ -130,6 +132,12 @@ endif()
 set( GODOT_CPP_SYSTEM_HEADERS ON CACHE BOOL "" FORCE )
 
 add_subdirectory( extern/godot-cpp )
+
+#if("${FLOAT_PRECISION}" STREQUAL "double")
+    target_compile_definitions( ${PROJECT_NAME} PUBLIC
+        REAL_T_IS_DOUBLE
+    )
+#endif()
 
 set_target_properties( godot-cpp
     PROPERTIES

@@ -22,6 +22,54 @@ namespace CesiumForGodot {
 	CesiumGeoreference::~CesiumGeoreference()
     {
     }
+    
+	void CesiumGeoreference::set_originAuthority( CesiumGeoreferenceOriginAuthority value )
+    {
+        this->_originAuthority = value;
+        this->MoveOrigin();
+    }
+
+    void CesiumGeoreference::set_latitude( double value )
+    {
+        this->_latitude = value;
+		this->set_originAuthority( CesiumGeoreferenceOriginAuthority::LongitudeLatitudeHeight );
+    }
+
+    void CesiumGeoreference::set_longitude( double value )
+	{
+		this->_longitude = value;
+        this->set_originAuthority( CesiumGeoreferenceOriginAuthority::LongitudeLatitudeHeight);
+	}
+
+    void CesiumGeoreference::set_height( double value )
+    {
+        this->_height = value;
+		this->set_originAuthority( CesiumGeoreferenceOriginAuthority::LongitudeLatitudeHeight );
+    }
+
+    void CesiumGeoreference::set_ecefX( double value )
+	{
+		this->_ecefX = value;
+		this->set_originAuthority( CesiumGeoreferenceOriginAuthority::EarthCenteredEarthFixed );
+	}
+
+    void CesiumGeoreference::set_ecefY( double value )
+    {
+        this->_ecefY = value;
+		this->set_originAuthority( CesiumGeoreferenceOriginAuthority::EarthCenteredEarthFixed );
+    }
+
+    void CesiumGeoreference::set_ecefZ( double value )
+    {
+        this->_ecefZ = value;
+        this->set_originAuthority( CesiumGeoreferenceOriginAuthority::EarthCenteredEarthFixed );
+    }
+
+    void CesiumGeoreference::set_scale( double value )
+	{
+		this->_scale = value;
+		this->MoveOrigin();
+	}
 
 	void CesiumGeoreference::Initialize()
 	{
@@ -95,12 +143,6 @@ namespace CesiumForGodot {
 
     }
 
-	void CesiumGeoreference::set_originAuthority( CesiumGeoreferenceOriginAuthority value )
-	{
-        this->_originAuthority = value;
-        this->MoveOrigin();
-	}
-
 	Transform3D CesiumGeoreference::ComputeLocalToEarthCenteredEarthFixedTransformation()
 	{
         this->_coordinateSystem = createCoordinateSystem(*this);
@@ -132,21 +174,34 @@ namespace CesiumForGodot {
 	}
 
 	void CesiumGeoreference::_bind_methods() {
-   
-		//ADD_GROUP("Origin", "Longitude Latitude Height");
-  //      ADD_PROPERTY( PropertyInfo( Variant::FLOAT, "longitude", PROPERTY_HINT_RANGE, "-180, 180, 0.01" ),
-  //                    "set_longitude", "get_longitude" );
-  //      ADD_PROPERTY(
-  //          PropertyInfo( Variant::FLOAT, "latitude", PROPERTY_HINT_RANGE, "-90, 90, 0.01" ),
-  //          "set_latitude", "get_latitude" );
-		//ADD_PROPERTY(
-		//	PropertyInfo( Variant::FLOAT, "height"),
-		//	"set_height", "get_height" );
+        ClassDB::bind_method( D_METHOD( "get_longitude" ), &CesiumGeoreference::get_longitude );
+        ClassDB::bind_method( D_METHOD( "set_longitude", "value" ), &CesiumGeoreference::set_longitude );
+        ClassDB::bind_method( D_METHOD( "get_latitude" ), &CesiumGeoreference::get_latitude );
+        ClassDB::bind_method( D_METHOD( "set_latitude", "value" ), &CesiumGeoreference::set_latitude );
+        ClassDB::bind_method( D_METHOD( "get_height" ), &CesiumGeoreference::get_height );
+        ClassDB::bind_method( D_METHOD( "set_height", "value" ), &CesiumGeoreference::set_height );
 
-		//ADD_GROUP( "Position", "Earth-Centered, Earth-Fixed" );
-  //      ADD_PROPERTY( PropertyInfo( Variant::FLOAT, "ecefX" ), "set_ecefX", "get_ecefX" );
-		//ADD_PROPERTY( PropertyInfo( Variant::FLOAT, "ecefY" ), "set_ecefY", "get_ecefY" );
-		//ADD_PROPERTY( PropertyInfo( Variant::FLOAT, "ecefZ" ), "set_ecefZ", "get_ecefZ" );
+        ClassDB::bind_method( D_METHOD( "get_ecefX" ), &CesiumGeoreference::get_ecefX );
+        ClassDB::bind_method( D_METHOD( "set_ecefX", "value" ), &CesiumGeoreference::set_ecefX );
+        ClassDB::bind_method( D_METHOD( "get_ecefY" ), &CesiumGeoreference::get_ecefY );
+        ClassDB::bind_method( D_METHOD( "set_ecefY", "value" ), &CesiumGeoreference::set_ecefY );
+        ClassDB::bind_method( D_METHOD( "get_ecefZ" ), &CesiumGeoreference::get_ecefZ );
+        ClassDB::bind_method( D_METHOD( "set_ecefZ", "value" ), &CesiumGeoreference::set_ecefZ );
+   
+		ADD_GROUP("Origin", "Longitude Latitude Height");
+        ADD_PROPERTY(
+            PropertyInfo( Variant::FLOAT, "latitude", PROPERTY_HINT_RANGE, "-90, 90, 0.01" ),
+            "set_latitude", "get_latitude" );
+        ADD_PROPERTY( PropertyInfo( Variant::FLOAT, "longitude", PROPERTY_HINT_RANGE, "-180, 180, 0.01" ),
+                      "set_longitude", "get_longitude" );
+		ADD_PROPERTY(
+			PropertyInfo( Variant::FLOAT, "height"),
+			"set_height", "get_height" );
+
+		ADD_GROUP( "Position", "Earth-Centered, Earth-Fixed" );
+        ADD_PROPERTY( PropertyInfo( Variant::FLOAT, "ECEF X" ), "set_ecefX", "get_ecefX" );
+		ADD_PROPERTY( PropertyInfo( Variant::FLOAT, "ECEF Y" ), "set_ecefY", "get_ecefY" );
+		ADD_PROPERTY( PropertyInfo( Variant::FLOAT, "ECEF Z" ), "set_ecefZ", "get_ecefZ" );
 	}
 
 } // CesiumForGodot
