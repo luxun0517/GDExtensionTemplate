@@ -6,10 +6,13 @@ target_sources( ${PROJECT_NAME}
         TestRendering.h
         TestRendering.cpp
 #        Cesium3DTilesetLoadFailureDetails.h
+        CesiumModelMetadata.h
+        CesiumModelMetadata.cpp
         CesiumWgs84Ellipsoid.h
         CesiumWgs84Ellipsoid.cpp
         GodotTransforms.h
         GodotTransforms.cpp
+        LoadGltfResult.h
 ##        GodotTilesetExternals.h
 ##        GodotTilesetExternals.cpp
 #        CesiumRuntimeSettings.h
@@ -24,10 +27,10 @@ target_sources( ${PROJECT_NAME}
 #        TextureLoader.cpp
         CesiumGeoreference.h
         CesiumGeoreference.cpp
-#        CesiumShaderProperties.h
-#        CesiumShaderProperties.cpp
-#        GodotPrepareRendererResources.h
-#        GodotPrepareRendererResources.cpp
+        CesiumShaderProperties.h
+        CesiumShaderProperties.cpp
+        GodotPrepareRendererResources.h
+        GodotPrepareRendererResources.cpp
 #        GD3DTileset.h
 #        GD3DTileset.cpp
 #        Cesium.h
