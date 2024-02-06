@@ -1,17 +1,42 @@
 //
 // Created by Harris.Lu on 2024/1/31.
 //
-
+#pragma warning(disable : 4834)
 #include "CesiumGeoreference.h"
 #include <godot_cpp/core/class_db.hpp>
 #include "CesiumWgs84Ellipsoid.h"
 
+using namespace CesiumGeospatial;
+using namespace CesiumUtility;
 namespace CesiumForGodot {
 
-	CesiumGeospatial::LocalHorizontalCoordinateSystem createCoordinateSystem(
+    LocalHorizontalCoordinateSystem createCoordinateSystem(
         const CesiumGeoreference &georeference )
     {
-    
+        if ( georeference.get_origin_authority() ==
+             CesiumGeoreferenceOriginAuthority::LongitudeLatitudeHeight )
+        {
+            return LocalHorizontalCoordinateSystem( 
+                Cartographic::fromDegrees(
+				    georeference.get_longitude(), 
+                    georeference.get_latitude(),
+				    georeference.get_height() 
+                ),
+                LocalDirection::East,
+                LocalDirection::Up,
+                LocalDirection::North,
+                1.0 / georeference.get_scale()
+		    );
+		}
+		else
+		{
+            return LocalHorizontalCoordinateSystem(
+                glm::dvec3( georeference.get_ecefX(), georeference.get_ecefY(),
+                            georeference.get_ecefZ() ),
+                LocalDirection::East, LocalDirection::Up, LocalDirection::North,
+                1.0 / georeference.get_scale() );
+        
+        }
 	}
 
 	CesiumGeoreference::CesiumGeoreference()
@@ -143,7 +168,8 @@ namespace CesiumForGodot {
 
     }
 
-	Transform3D CesiumGeoreference::ComputeLocalToEarthCenteredEarthFixedTransformation()
+	Transform3D CesiumGeoreference::
+        ComputeLocalToEarthCenteredEarthFixedTransformation()
 	{
         this->_coordinateSystem = createCoordinateSystem(*this);
         return GodotTransforms::toGodotMathematics(

@@ -8,8 +8,8 @@ target_sources( ${PROJECT_NAME}
 #        Cesium3DTilesetLoadFailureDetails.h
         CesiumWgs84Ellipsoid.h
         CesiumWgs84Ellipsoid.cpp
-#        GodotTransforms.h
-#        GodotTransforms.cpp
+        GodotTransforms.h
+        GodotTransforms.cpp
 ##        GodotTilesetExternals.h
 ##        GodotTilesetExternals.cpp
 #        CesiumRuntimeSettings.h
@@ -22,8 +22,8 @@ target_sources( ${PROJECT_NAME}
 #        CameraManager.cpp
 #        TextureLoader.h
 #        TextureLoader.cpp
-#        CesiumGeoreference.h
-#        CesiumGeoreference.cpp
+        CesiumGeoreference.h
+        CesiumGeoreference.cpp
 #        CesiumShaderProperties.h
 #        CesiumShaderProperties.cpp
 #        GodotPrepareRendererResources.h

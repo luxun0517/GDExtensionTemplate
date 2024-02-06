@@ -40,43 +40,43 @@ namespace CesiumForGodot {
         void set_originAuthority( CesiumGeoreferenceOriginAuthority value );
 
         void set_latitude( double value );
-        double get_latitude()
+        double get_latitude() const
         {
             return this->_latitude;
         }
 
         void set_longitude( double value );
-        double get_longitude()
+        double get_longitude() const
 		{
             return this->_longitude;
 		}
 
         void set_height( double value );
-        double get_height()
+        double get_height() const
         {
             return this->_height;
         }
 
         void set_ecefX( double value );
-        double get_ecefX()
+        double get_ecefX() const
 		{
 			return this->_ecefX;
 		}
 
         void set_ecefY( double value );
-        double get_ecefY()
+        double get_ecefY() const
         {
             return this->_ecefY;
         }
 
         void set_ecefZ( double value );
-        double get_ecefZ()
+        double get_ecefZ() const
 		{
 			return this->_ecefZ;
 		}
 
         void set_scale( double value );
-        double get_scale()
+        double get_scale() const
 		{
 			return this->_scale;
 		}
