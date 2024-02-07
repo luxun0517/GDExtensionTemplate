@@ -5,6 +5,10 @@
 #ifndef GODOT_GODOTPREPARERENDERERRESOURCES_H
 #define GODOT_GODOTPREPARERENDERERRESOURCES_H
 
+#include <godot_cpp/variant/rid.hpp>
+#include <godot_cpp/classes/rendering_server.hpp>
+#include <godot_cpp/classes/rendering_device.hpp>
+#include <godot_cpp/classes/mesh.hpp>
 #include <Cesium3DTilesSelection/IPrepareRendererResources.h>
 #include "CesiumShaderProperties.h"
 #include "GD3DTileset.h"

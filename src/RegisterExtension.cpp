@@ -6,16 +6,15 @@
 #include "godot_cpp/core/defs.hpp"
 #include "godot_cpp/godot.hpp"
 
-//#include "GD3DTileset.h"
+#include "GD3DTileset.h"
 //#include "Example.h"
 //#include "GDExtensionTemplate.h"
 //#include "TestRendering.h"
-#include "CesiumGeoreference.h"
+//#include "CesiumGeoreference.h"
 
 /// @file
 /// Register our classes with Godot.
 
-using namespace CesiumForGodot;
 namespace
 {
     /// @brief Called by Godot to let us register our classes with Godot.
@@ -30,10 +29,10 @@ namespace
             return;
         }
 
-        godot::ClassDB::register_class<CesiumGeoreference>();
+//        godot::ClassDB::register_class<CesiumGeoreference>();
 //        godot::ClassDB::register_class<TestRendering>();
-//        godot::ClassDB::register_class<GD3DTileset>();
-//        godot::ClassDB::register_class<ExampleRef>();
+        godot::ClassDB::register_class<CesiumForGodot::GD3DTileset>();
+        //        godot::ClassDB::register_class<ExampleRef>();
 //        godot::ClassDB::register_class<ExampleMin>();
 //        godot::ClassDB::register_class<Example>();
 //        godot::ClassDB::register_class<ExampleVirtual>( true );

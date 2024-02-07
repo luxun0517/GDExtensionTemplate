@@ -7,11 +7,10 @@
 
 #include <cstdint>
 #include <godot_cpp/classes/ref.hpp>
-
+//#include "GD3DTileset.h"
+class GD3DTileset;
 using namespace godot;
 namespace CesiumForGodot {
-
-    class GD3DTileset;
 
     enum class Cesium3DTilesetLoadType : uint8_t
     {
@@ -33,7 +32,7 @@ namespace CesiumForGodot {
 
     struct Cesium3DTilesetLoadFailureDetails
     {
-        Ref<GD3DTileset> tileset;
+        std::weak_ptr<GD3DTileset> tileset;
 
         Cesium3DTilesetLoadType type = Cesium3DTilesetLoadType::Unknown;
 

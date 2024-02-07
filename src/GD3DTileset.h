@@ -9,6 +9,7 @@
 #include <Cesium3DTilesSelection/Tileset.h>
 #include <Cesium3DTilesSelection/ViewUpdateResult.h>
 #include "CesiumCreditSystem.h"
+#include "Cesium3DTilesetLoadFailureDetails.h"
 
 using namespace Cesium3DTilesSelection;
 using namespace godot;
@@ -72,8 +73,7 @@ namespace CesiumForGodot {
         void LoadTileset();
 
         void updateLastViewUpdateResultState( 
-            const Ref<GD3DTileset> &tileset,
-            const Cesium3DTilesSelection::ViewUpdateResult &currentResult
+            const Cesium3DTilesSelection::ViewUpdateResult& currentResult
         );
 
     public:

@@ -15,7 +15,6 @@
 #include <CesiumUtility/Math.h>
 #include <glm/trigonometric.hpp>
 #include "GodotTransforms.h"
-#include "CesiumGeoreference.h"
 
 using namespace Cesium3DTilesSelection;
 using namespace CesiumGeospatial;
@@ -84,16 +83,14 @@ namespace CesiumForGodot {
         }
     }
 
-	std::vector<ViewState> CameraManager::getAllCameras( 
-		const Ref<GD3DTileset> &context
-	)
+	std::vector<ViewState> CameraManager::getAllCameras( const GD3DTileset &context )
     {
         const LocalHorizontalCoordinateSystem *pCoordinateSystem = nullptr;
 
-		glm::dmat4 godotWorldToTileset = GodotTransforms::fromGodot( context->get_transform() );
+		glm::dmat4 godotWorldToTileset = GodotTransforms::fromGodot( context.get_transform() );
 
 		Ref<CesiumGeoreference> georeference =
-            static_cast<CesiumGeoreference*>( context->get_parent_node_3d() ); // CesiumGeoreference
+            static_cast<CesiumGeoreference*>( context.get_parent_node_3d() ); // CesiumGeoreference
         if ( georeference != nullptr )
         {
             pCoordinateSystem = &georeference->getCoordinateSystem();
@@ -117,7 +114,7 @@ namespace CesiumForGodot {
 		}
         else
         {
-            _camera = context->get_viewport()->get_camera_3d();
+            _camera = context.get_viewport()->get_camera_3d();
         }
 
         result.emplace_back(
