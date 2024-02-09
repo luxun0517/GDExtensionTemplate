@@ -5,4 +5,10 @@
 #include "CesiumCreditSystem.h"
 
 namespace CesiumForGodot {
+
+    CesiumCreditSystem* CesiumCreditSystem::GetDefaultCreditSystem()
+    {
+        CesiumCreditSystem* pCreditSystem = nullptr;
+        return pCreditSystem;
+    }
 } // CesiumForGodot

@@ -193,6 +193,9 @@ namespace CesiumForGodot {
             case NOTIFICATION_READY:
                 this->Initialize();
 				break;
+            case NOTIFICATION_ENTER_TREE:
+                WARN_PRINT( "NOTIFICATION_ENTER_TREE" );
+                break;
             default:
                 break;
         }

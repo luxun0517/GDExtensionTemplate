@@ -33,38 +33,38 @@ using namespace CesiumAsync;
 using namespace godot;
 namespace CesiumForGodot {
 
-    bool validateVertexColors(
-        const Model &model,
-        uint32_t accessorId,
-        size_t vertexCount
-    )
-    {
-        if ( accessorId >= model.accessors.size() )
-        {
-            return false;
-        }
-
-        const Accessor &colorAccessor = model.accessors[accessorId];
-        if ( colorAccessor.type != Accessor::Type::VEC3 &&
-             colorAccessor.type != Accessor::Type::VEC4 )
-        {
-            return false;
-        }
-
-        if ( colorAccessor.componentType != Accessor::ComponentType::UNSIGNED_BYTE &&
-             colorAccessor.componentType != Accessor::ComponentType::UNSIGNED_SHORT &&
-             colorAccessor.componentType != Accessor::ComponentType::FLOAT )
-        {
-            return false;
-        }
-
-        if ( colorAccessor.count < vertexCount )
-        {
-            return false;
-        }
-
-        return true;
-    }
+    // bool validateVertexColors(
+    //     const Model &model,
+    //     uint32_t accessorId,
+    //     size_t vertexCount
+    // )
+    // {
+    //     if ( accessorId >= model.accessors.size() )
+    //     {
+    //         return false;
+    //     }
+    //
+    //     const Accessor &colorAccessor = model.accessors[accessorId];
+    //     if ( colorAccessor.type != Accessor::Type::VEC3 &&
+    //          colorAccessor.type != Accessor::Type::VEC4 )
+    //     {
+    //         return false;
+    //     }
+    //
+    //     if ( colorAccessor.componentType != Accessor::ComponentType::UNSIGNED_BYTE &&
+    //          colorAccessor.componentType != Accessor::ComponentType::UNSIGNED_SHORT &&
+    //          colorAccessor.componentType != Accessor::ComponentType::FLOAT )
+    //     {
+    //         return false;
+    //     }
+    //
+    //     if ( colorAccessor.count < vertexCount )
+    //     {
+    //         return false;
+    //     }
+    //
+    //     return true;
+    // }
 
     void populateMeshDataArray(
         TileLoadResult &tileLoadResult
@@ -84,12 +84,12 @@ namespace CesiumForGodot {
                 const CesiumGltf::Mesh &mesh,
                 const CesiumGltf::MeshPrimitive &primitive,
                 const glm::dmat4 &transform ) {
-                uint64_t flags = RenderingServer::ARRAY_FLAG_COMPRESS_ATTRIBUTES;
-
-                Array array;
-                array.resize( godot::Mesh::ARRAY_MAX );
-
-                godot::Mesh::PrimitiveType primitive_type = godot::Mesh::PRIMITIVE_TRIANGLES;
+                // uint64_t flags = RenderingServer::ARRAY_FLAG_COMPRESS_ATTRIBUTES;
+                //
+                // Array array;
+                // array.resize( godot::Mesh::ARRAY_MAX );
+                //
+                // godot::Mesh::PrimitiveType primitive_type = godot::Mesh::PRIMITIVE_TRIANGLES;
 
       //          switch ( primitive.mode )
       //          {
@@ -277,7 +277,7 @@ namespace CesiumForGodot {
 	}
 
     GodotPrepareRendererResources::GodotPrepareRendererResources(
-        const Ref<GD3DTileset> &tileset ) :
+        GD3DTileset* tileset ) :
         _tileset( tileset ),
         _shaderProperty()
     {
@@ -290,6 +290,7 @@ namespace CesiumForGodot {
             const glm::dmat4 &transform,
             const std::any &renderOptions )
     {
+        WARN_PRINT( "prepareInLoadThread" );
         CesiumGltf::Model* pModel = std::get_if<CesiumGltf::Model>(&tileLoadResult.contentKind);
         if ( !pModel )
         {
@@ -302,18 +303,76 @@ namespace CesiumForGodot {
 
          int32_t numberOfPrimitives = countPrimitives( *pModel );
 
-        /* return asyncSystem.runInMainThread( [numberOfPrimitives]() {
+        return asyncSystem.runInMainThread( [numberOfPrimitives]() {
              Vector<RID> _meshes;
              _meshes.resize( numberOfPrimitives );
              _meshes.fill( RS->mesh_create() );
              return _meshes;
          })
-         .thenInWorkerThread(
-             [tileLoadResult = std::move( tileLoadResult )]() mutable
-             {
+        .thenInWorkerThread(
+            [asyncSystem, tileLoadResult = std::move( tileLoadResult )]( Vector<RID> _meshes ) mutable
+            {
                 populateMeshDataArray( tileLoadResult );
-             }
-         );*/
+                return asyncSystem.createResolvedFuture(
+                    TileLoadResultAndRenderResources{ std::move(tileLoadResult), nullptr });
+            });
+         // .thenInWorkerThread(
+         //     [tileLoadResult = std::move( tileLoadResult )]() mutable
+         //     {
+         //        // populateMeshDataArray( tileLoadResult );
+         //     }
+         // );
+    }
+
+    void* GodotPrepareRendererResources::prepareInMainThread(
+      Cesium3DTilesSelection::Tile& tile,
+      void* pLoadThreadResult)
+    {
+        WARN_PRINT( "prepareInMainThread" );
+        return nullptr;
+    }
+
+    void GodotPrepareRendererResources::free( Cesium3DTilesSelection::Tile &tile,
+        void *pLoadThreadResult, void *pMainThreadResult ) noexcept
+    {
+        WARN_PRINT( "free" );
+    }
+
+    void * GodotPrepareRendererResources::prepareRasterInLoadThread( CesiumGltf::ImageCesium &image,
+        const std::any &rasterOverlayOptions )
+    {
+        WARN_PRINT( "prepareRasterInLoadThread" );
+        return nullptr;
+    }
+
+    void * GodotPrepareRendererResources::prepareRasterInMainThread(
+        CesiumRasterOverlays::RasterOverlayTile &rasterTile, void *pLoadThreadResult )
+    {
+        WARN_PRINT( "prepareRasterInMainThread" );
+        return nullptr;
+    }
+
+    void GodotPrepareRendererResources::freeRaster(
+        const CesiumRasterOverlays::RasterOverlayTile &rasterTile, void *pLoadThreadResult,
+        void *pMainThreadResult ) noexcept
+    {
+        WARN_PRINT( "freeRaster" );
+    }
+
+    void GodotPrepareRendererResources::attachRasterInMainThread(
+        const Cesium3DTilesSelection::Tile &tile, int32_t overlayTextureCoordinateID,
+        const CesiumRasterOverlays::RasterOverlayTile &rasterTile,
+        void *pMainThreadRendererResources, const glm::dvec2 &translation, const glm::dvec2 &scale )
+    {
+        WARN_PRINT( "attachRasterInMainThread" );
+    }
+
+    void GodotPrepareRendererResources::detachRasterInMainThread(
+        const Cesium3DTilesSelection::Tile &tile, int32_t overlayTextureCoordinateID,
+        const CesiumRasterOverlays::RasterOverlayTile &rasterTile,
+        void *pMainThreadRendererResources ) noexcept
+    {
+        WARN_PRINT( "detachRasterInMainThread" );
     }
 
 } // CesiumForGodot

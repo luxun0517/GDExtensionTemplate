@@ -22,12 +22,12 @@ namespace CesiumAsync
 } // namespace CesiumAsync
 
 namespace CesiumForGodot {
-    const std::shared_ptr<CesiumAsync::IAssetAccessor> &getAssetAccessor();
-    const std::shared_ptr<CesiumAsync::ITaskProcessor> &getTaskProcessor();
-    CesiumAsync::AsyncSystem getAsyncSystem();
+    // const std::shared_ptr<CesiumAsync::IAssetAccessor> &getAssetAccessor();
+    // const std::shared_ptr<CesiumAsync::ITaskProcessor> &getTaskProcessor();
+    // CesiumAsync::AsyncSystem getAsyncSystem();
 
-    Cesium3DTilesSelection::TilesetExternals createTilesetExternals(
-        const Ref<GD3DTileset> &tileset );
+   TilesetExternals createTilesetExternals(
+        GD3DTileset *tileset );
 
 } // CesiumForGodot
 

@@ -15,10 +15,10 @@
 
 namespace CesiumForGodot {
 
-    //gltf 原始图元转换为Godot的Mesh数据
+    //gltf 鍘熷鍥惧厓杞崲涓篏odot鐨凪esh鏁版嵁
     struct CesiumPrimitiveInfo
     {
-        //是否为POINTS渲染
+        //鏄惁涓篜OINTS娓叉煋
         bool containsPoints = false;
 
         bool isTranslucent = false;
@@ -47,7 +47,7 @@ namespace CesiumForGodot {
     class GodotPrepareRendererResources : public Cesium3DTilesSelection::IPrepareRendererResources {
 
     public:
-        GodotPrepareRendererResources( const Ref<GD3DTileset> &tileset );
+        GodotPrepareRendererResources( GD3DTileset* tileset );
 
         virtual CesiumAsync::Future<Cesium3DTilesSelection::TileLoadResultAndRenderResources>
             prepareInLoadThread(
@@ -95,7 +95,7 @@ namespace CesiumForGodot {
         ) noexcept override;
 
     private:
-        Ref<GD3DTileset> _tileset;
+        GD3DTileset* _tileset;
         CesiumShaderProperties _shaderProperty;
     };
 

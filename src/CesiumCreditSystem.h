@@ -5,13 +5,14 @@
 #ifndef CESIUM_GODOT_CESIUMCREDITSYSTEM_H
 #define CESIUM_GODOT_CESIUMCREDITSYSTEM_H
 
+#include <memory>
 #include <CesiumUtility/CreditSystem.h>
 
 namespace CesiumForGodot {
 
     class CesiumCreditSystem {
     public:
-        static CesiumCreditSystem *GetDefaultCreditSystem();
+        static CesiumCreditSystem* GetDefaultCreditSystem();
 
         const std::shared_ptr<CesiumUtility::CreditSystem> &GetExternalCreditSystem() const
         {

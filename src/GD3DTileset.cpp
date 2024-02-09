@@ -8,10 +8,11 @@
 #include "Cesium3DTilesetLoadFailureDetails.h"
 #include "constants.h"
 #include <godot_cpp/classes/rendering_server.hpp>
-#include "GodotTilesetExternals.h"
+// #include "GodotTilesetExternals.h"
 #include "CameraManager.h"
 #include <spdlog/spdlog.h>
 #include "GodotPrepareRendererResources.h"
+#include "GodotTilesetExternals.h"
 
 namespace CesiumForGodot {
 
@@ -39,13 +40,13 @@ namespace CesiumForGodot {
         //    CesiumForUnity::CesiumRasterOverlay overlay = overlays[i];
         //    overlay.RemoveFromTileset();
         //}
-
-        this->_pTileset.reset();
+      
+        // this->_pTileset.reset();
 	}
 		
 	/// <summary>
     /// 设置3dtileset url
-    /// </summary>
+    /// </summary>   file:///C:/Users/10968/Desktop/WorkSpace/engine/cesium-godot/project/BatchedColors/tileset.json
     /// <param name="url"></param>
     void GD3DTileset::set_url( String url )
     {
@@ -178,17 +179,18 @@ namespace CesiumForGodot {
                 this->_pTileset->getNumberOfTilesLoaded()，
                 currentResult.frameNumber
             );*/
-            SPDLOG_LOGGER_INFO(
-                this->_pTileset->getExternals().pLogger,
-                "{0}: Visited {1}, Culled Visited {2}, Rendered {3}, Culled {4}, Max "
-                "Depth Visited {5}, Loading-Worker {6}, Loading-Main {7} "
-                "Total Tiles Resident {8}, Frame {9}",
-                this->get_name(), currentResult.tilesVisited,
-                currentResult.culledTilesVisited, currentResult.tilesToRenderThisFrame.size(),
-                currentResult.tilesCulled, currentResult.maxDepthVisited,
-                currentResult.workerThreadTileLoadQueueLength,
-                currentResult.mainThreadTileLoadQueueLength,
-                this->_pTileset->getNumberOfTilesLoaded(), currentResult.frameNumber );
+            WARN_PRINT( "updateLastViewUpdateResultState" );
+            // SPDLOG_LOGGER_INFO(
+            //     this->_pTileset->getExternals().pLogger,
+            //     "{0}: Visited {1}, Culled Visited {2}, Rendered {3}, Culled {4}, Max "
+            //     "Depth Visited {5}, Loading-Worker {6}, Loading-Main {7} "
+            //     "Total Tiles Resident {8}, Frame {9}",
+            //     this->get_name(), currentResult.tilesVisited,
+            //     currentResult.culledTilesVisited, currentResult.tilesToRenderThisFrame.size(),
+            //     currentResult.tilesCulled, currentResult.maxDepthVisited,
+            //     currentResult.workerThreadTileLoadQueueLength,
+            //     currentResult.mainThreadTileLoadQueueLength,
+            //     this->_pTileset->getNumberOfTilesLoaded(), currentResult.frameNumber );
         }
 
         this->_lastUpdateResult = currentResult;
@@ -196,16 +198,17 @@ namespace CesiumForGodot {
 
     void GD3DTileset::Start()
 	{
-
+	    //执行Update方法
+	    set_process(true);
 	}
 
     void GD3DTileset::Update( double delta )
 	{
-        if ( this->get_suspendUpdate() )
-        {
-            return;
-        }
-
+       if ( this->get_suspendUpdate() )
+       {
+           return;
+       }
+       
         if ( this->_destroyTilesetOnNextUpdate )
         {
 			this->_destroyTilesetOnNextUpdate = false;
@@ -220,64 +223,56 @@ namespace CesiumForGodot {
                 return;
             }
         }
-
-         if ( Engine::get_singleton()->is_editor_hint() )
-         {
-             WARN_PRINT( "Editor" );
-         }
-
-         if ( !this->_pTileset )
-         {
-             this->LoadTileset();
-             if (!this->_pTileset )
-			 {
-				 return;
-			 }
-         }
+    //
+    //      if ( Engine::get_singleton()->is_editor_hint() )
+    //      {
+    //          WARN_PRINT( "Editor" );
+    //      }
 
          std::vector<ViewState> viewStates =
              CameraManager::getAllCameras( *this );
-
+         
          const ViewUpdateResult &updateResult =
              this->_pTileset->updateView( viewStates, static_cast<float>(delta) );
          this->updateLastViewUpdateResultState( updateResult );
-
-         for ( Tile *pTile : updateResult.tilesFadingOut )
-         {
-             if ( pTile->getState() != TileLoadState::Done )
-             {
-                 continue;
-             }
-
-             const Cesium3DTilesSelection::TileContent &content = pTile->getContent();
-             const Cesium3DTilesSelection::TileRenderContent *pRenderContent =
-                 content.getRenderContent();
-             if ( pRenderContent )
-             {
-                 //CesiumGltfGameObject *pCesiumGameObject =
-                 //    static_cast<CesiumGltfGameObject *>( pRenderContent->getRenderResources() );
-                 //if ( pCesiumGameObject && pCesiumGameObject->pGameObject )
-                 //{
-                 //    RS->instance_set_visible( *pCesiumGameObject->pGameObject, false );
-                 //    //RS->free_rid( *pCesiumGameObject->pGameObject );
-                 //    //pCesiumGameObject->pGameObject->SetActive( false );
-                 //}
-             }
-
-         }
-
+         //
+         // for ( Tile *pTile : updateResult.tilesFadingOut )
+         // {
+         //     if ( pTile->getState() != TileLoadState::Done )
+         //     {
+         //         continue;
+         //     }
+         //
+         //     const Cesium3DTilesSelection::TileContent &content = pTile->getContent();
+         //     const Cesium3DTilesSelection::TileRenderContent *pRenderContent =
+         //         content.getRenderContent();
+         //     if ( pRenderContent )
+         //     {
+         //         //CesiumGltfGameObject *pCesiumGameObject =
+         //         //    static_cast<CesiumGltfGameObject *>( pRenderContent->getRenderResources() );
+         //         //if ( pCesiumGameObject && pCesiumGameObject->pGameObject )
+         //         //{
+         //         //    RS->instance_set_visible( *pCesiumGameObject->pGameObject, false );
+         //         //    //RS->free_rid( *pCesiumGameObject->pGameObject );
+         //         //    //pCesiumGameObject->pGameObject->SetActive( false );
+         //         //}
+         //     }
+         //
+         // }
+         //
+	   
          for ( auto pTile : updateResult.tilesToRenderThisFrame )
          {
              if ( pTile->getState() != TileLoadState::Done )
              {
                  continue;
              }
-
              const Cesium3DTilesSelection::TileContent &content = pTile->getContent();
              const Cesium3DTilesSelection::TileRenderContent *pRenderContent =
                  content.getRenderContent();
              if ( pRenderContent )
              {
+                 WARN_PRINT( "tilesToRenderThisFrame" );
                  //CesiumGltfGameObject *pCesiumGameObject =
                  //    static_cast<CesiumGltfGameObject *>( pRenderContent->getRenderResources() );
                  //if ( pCesiumGameObject && pCesiumGameObject->pGameObject )
@@ -351,13 +346,13 @@ namespace CesiumForGodot {
         {
             this->_pTileset = std::make_unique<Tileset>( 
                 createTilesetExternals(this), 
-                this->_url.utf8(),
+                this->_url.utf8().get_data(),
                 options
             );
         }
 
         // 添加 overlay
-        WARN_PRINT( "TODO: Add any overlay components" );
+        // WARN_PRINT( "TODO: Add any overlay components" );
       /*  System::Array1<CesiumForUnity::CesiumRasterOverlay> overlays =
             tileset.gameObject().GetComponents<CesiumForUnity::CesiumRasterOverlay>();
         for ( int32_t i = 0, len = overlays.Length(); i < len; ++i )
@@ -369,7 +364,7 @@ namespace CesiumForGodot {
             this->find_children( "collider_view", "MeshInstance3D" );*/
         //this->find_children()
         //  Add any tile excluder components
-        WARN_PRINT( "TODO: Add any tile excluder components" );
+        // WARN_PRINT( "TODO: Add any tile excluder components" );
      /*   System::Array1<CesiumForUnity::CesiumTileExcluder> excluders =
             tileset.gameObject().GetComponentsInParent<CesiumForUnity::CesiumTileExcluder>();
         for ( int32_t i = 0, len = excluders.Length(); i < len; ++i )
@@ -389,11 +384,11 @@ namespace CesiumForGodot {
         ClassDB::bind_method( D_METHOD( "set_url", "url"), &GD3DTileset::set_url);
         ClassDB::bind_method( D_METHOD( "get_url" ), &GD3DTileset::get_url);
 
-		ADD_GROUP( "Renderer", "render_" );
-        ADD_PROPERTY( PropertyInfo( Variant::STRING, "URL", PROPERTY_HINT_TYPE_STRING ),
-                      "set_url", "get_url" );
-
-        ADD_GROUP( "Level of Detail", "level of detail" );
+		// ADD_GROUP( "Renderer", "render_" );
+        ADD_PROPERTY( PropertyInfo( Variant::STRING, "URL", PROPERTY_HINT_NONE ),
+                "set_url", "get_url" );
+  
+  //       ADD_GROUP( "Level of Detail", "level of detail" );
 	}
 
 	void GD3DTileset::_notification(int p_what) {
@@ -402,7 +397,6 @@ namespace CesiumForGodot {
             case NOTIFICATION_READY:
             {
                 Start();
-                WARN_PRINT( "NOTIFICATION_READY" );
                 break;
             }
             case NOTIFICATION_PROCESS:
@@ -412,7 +406,6 @@ namespace CesiumForGodot {
 			}
             case NOTIFICATION_ENTER_TREE:
 			{
-				WARN_PRINT( "NOTIFICATION_ENTER_TREE" );
 				break;
 			}
             default:

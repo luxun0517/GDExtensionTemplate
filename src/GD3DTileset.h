@@ -28,7 +28,7 @@ namespace CesiumForGodot {
         String _url;
 
         float _maximumScreenSpaceError = 16.0;
-        //预加载父节点
+        //棰勫姞杞界埗鑺傜偣
         bool _preloadAncestors = true;
 
         bool _preloadSiblings = true;

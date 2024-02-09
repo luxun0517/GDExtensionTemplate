@@ -10,13 +10,16 @@
 namespace CesiumAsync {
     class AsyncSystem;
     class IAssetAccessor;
+    class ICacheDatabase;
 }
 
 namespace CesiumForGodot {
 
     const std::shared_ptr<CesiumAsync::IAssetAccessor>& getAssetAccessor();
 
-    const CesiumAsync::AsyncSystem& getAsyncSystem();
+    std::shared_ptr<CesiumAsync::ICacheDatabase>& getCacheDatabase();
+
+    CesiumAsync::AsyncSystem& getAsyncSystem() noexcept;
 }
 
 

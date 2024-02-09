@@ -77,7 +77,7 @@ namespace CesiumForGodot {
             }
             if ( node->is_class( "Camera3D" ) )
             {
-                WARN_PRINT( vformat( "Found a Camera3D at: %s", node->get_path() ) );
+                // WARN_PRINT( vformat( "Found a Camera3D at: %s", node->get_path() ) );
                 cam_array.push_back( node );
             }
         }
@@ -89,7 +89,7 @@ namespace CesiumForGodot {
 
 		glm::dmat4 godotWorldToTileset = GodotTransforms::fromGodot( context.get_transform() );
 
-		Ref<CesiumGeoreference> georeference =
+		CesiumGeoreference* georeference =
             static_cast<CesiumGeoreference*>( context.get_parent_node_3d() ); // CesiumGeoreference
         if ( georeference != nullptr )
         {
@@ -97,7 +97,7 @@ namespace CesiumForGodot {
         }
 
 		std::vector<ViewState> result;
-        Camera3D *_camera;
+        Camera3D *_camera = nullptr;
 		if ( Engine::get_singleton()->is_editor_hint() )
         {
             EditorScript temp_editor_script;
@@ -107,7 +107,7 @@ namespace CesiumForGodot {
                            editor_interface->get_edited_scene_root(), cam_array );
             if ( !cam_array.is_empty() )
             {
-                WARN_PRINT( "Connecting to the first editor camera" );
+                // WARN_PRINT( "Connecting to the first editor camera" );
                 //LOG( DEBUG, "Connecting to the first editor camera" );
                 _camera = Object::cast_to<Camera3D>( cam_array[0] );
             }
@@ -120,6 +120,8 @@ namespace CesiumForGodot {
         result.emplace_back(
             godotCameraToViewState( pCoordinateSystem, godotWorldToTileset, *_camera )
         );
+
+	    return result;
 	}
 
 } // CesiumForGodot

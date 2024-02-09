@@ -1,11 +1,14 @@
-//
+ï»¿//
 // Created by Harris.Lu on 2024/1/31.
 //
-
+#pragma warning(disable : 4189)
 #include "TestRendering.h"
 #include <godot_cpp/classes/rendering_server.hpp>
 #include "constants.h"
+#include "GodotExternals.h"
+#include "Cesium3DTilesSelection/TilesetExternals.h"
 #include <godot_cpp/classes/world3d.hpp>
+#include "GodotPrepareRendererResources.h"
 
 namespace CesiumForGodot {
 
@@ -17,7 +20,7 @@ namespace CesiumForGodot {
         RID scenario = get_world_3d()->get_scenario();
         RID test_cube = RS->get_test_cube();
 
-        //´´½¨²ÄÖÊ
+        //åˆ›å»ºæè´¨
         RID _material = RS->material_create();
         RID _shader = RS->shader_create();
 
@@ -37,17 +40,29 @@ namespace CesiumForGodot {
             }
         )" );
 
-        //»ñÈ¡shader²ÎÊýÁÐ±í
+        //èŽ·å–shaderå‚æ•°åˆ—è¡¨
         //param_list = RS->get_shader_parameter_list( _shader );
 
         RS->material_set_shader( _material, _shader );
 
         RS->mesh_surface_set_material( test_cube, 0, _material );
 
-        //ÊµÀý»¯µ½³¡¾°ÖÐ
+        //å®žä¾‹åŒ–åˆ°åœºæ™¯ä¸­
         RS->instance_create2(test_cube, scenario);
 
         WARN_PRINT("TestRendering::__ready");
+
+
+        const std::shared_ptr<CesiumAsync::IAssetAccessor>& pAssetAccessor = getAssetAccessor();
+        const CesiumAsync::AsyncSystem& asyncSystem = getAsyncSystem();
+
+        Cesium3DTilesSelection::TilesetExternals externals{
+            pAssetAccessor,
+            std::make_shared<GodotPrepareRendererResources>( this ),
+            asyncSystem,
+            
+        };
+        
 	}
 
     void TestRendering::_notification(int p_what) {
