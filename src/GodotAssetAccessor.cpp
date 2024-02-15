@@ -8,18 +8,13 @@
 #include "godot_cpp/classes/file_access.hpp"
 #include "godot_cpp/classes/http_client.hpp"
 #include "godot_cpp/classes/http_request.hpp"
+#include "godot_cpp/classes/worker_thread_pool.hpp"
 
-#include <CesiumAsync/AsyncSystem.h>
-#include <CesiumAsync/IAssetResponse.h>
-#include <CesiumAsync/IAssetRequest.h>
-#include <CesiumAsync/HttpHeaders.h>
 #include <godot_cpp/classes/project_settings.hpp>
 #include <godot_cpp/classes/os.hpp>
 #include <godot_cpp/templates/vector.hpp>
 #include <godot_cpp/classes/marshalls.hpp>
 #include <uriparser/Uri.h>
-
-using namespace CesiumAsync;
 
 using namespace godot;
 
@@ -92,9 +87,6 @@ namespace
 
 namespace
 {
-    class GodotAssetResponse : public CesiumAsync::IAssetResponse
-    {
-    };
 
     /**
      * \brief read file from local file system
@@ -219,33 +211,53 @@ namespace CesiumForGodot {
 	    }
 
 	    HttpHeaders cesiumRequestHeaders = this->_cesiumRequestHeaders;
-	
-	    return asyncSystem.createFuture<std::shared_ptr<CesiumAsync::IAssetRequest>>(
-	        [&url, &headers, &cesiumRequestHeaders, &tileset = this->_tileset](const auto& promise) {
-	        // Ref<HTTPClient> client = memnew( HTTPClient );
-	        // client->connect_to_host( url.c_str() );
-         //
-	        HttpHeaders requestHeaders = cesiumRequestHeaders;
-	        PackedStringArray _headers;
-	        for (const auto& header : headers)
-	        {
-	            requestHeaders.insert( header );
-	        }
-	        for (const auto& header : requestHeaders) {
-	            _headers.push_back( vformat( "%s : %s", header.first.c_str(), header.second.c_str() ) );
-            }
-
+	 
+	    return asyncSystem.runInMainThread( [asyncSystem, url, &tileset = this->_tileset]() {
 	        tileset->request( url.c_str() );
 
-	        // Error err = client->request( HTTPClient::METHOD_GET, url.c_str(), _headers );
-	        // if(err != OK)
-	        // {
-	        //     WARN_PRINT( "request failed" );
-	        // } else {
-         //        WARN_PRINT( "request successed" );	            
-	        // }
+	        auto promise = asyncSystem.createPromise<std::shared_ptr<IAssetRequest>>();
+            auto future = promise.getFuture();
+
+	        tileset->loadCompletedCallback( [promise](String &response) {
+	            WARN_PRINT(  vformat( "response: %s ", response)  );
+
+	            promise.resolve(std::make_shared<GodotAssetRequest>());
+	        });
+	        // Callable callback = callable_mp( tileset, &GD3DTileset::requestTilesetCompleted );
+	        //
+	        //
+	        // tileset->connect( "tileset_request_completed", callback );
+	        // WARN_PRINT( vformat( "url: %s ", url.c_str() ) );
 	        
-	    } );
+	        return future;
+	    });
+	
+	    // return asyncSystem.createFuture<std::shared_ptr<CesiumAsync::IAssetRequest>>(
+	    //     [&url, &headers, &cesiumRequestHeaders, &tileset = this->_tileset](const auto& promise) {
+	    //     // Ref<HTTPClient> client = memnew( HTTPClient );
+	    //     // client->connect_to_host( url.c_str() );
+     //     //
+	    //     HttpHeaders requestHeaders = cesiumRequestHeaders;
+	    //     PackedStringArray _headers;
+	    //     for (const auto& header : headers)
+	    //     {
+	    //         requestHeaders.insert( header );
+	    //     }
+	    //     for (const auto& header : requestHeaders) {
+	    //         _headers.push_back( vformat( "%s : %s", header.first.c_str(), header.second.c_str() ) );
+     //        }
+     //
+	    //     tileset->request( url.c_str() );
+     //
+	    //     // Error err = client->request( HTTPClient::METHOD_GET, url.c_str(), _headers );
+	    //     // if(err != OK)
+	    //     // {
+	    //     //     WARN_PRINT( "request failed" );
+	    //     // } else {
+     //     //        WARN_PRINT( "request successed" );	            
+	    //     // }
+	    //     
+	    // } );
 
 	    // WARN_PRINT( "file is url" );
 	    // auto pMockCompletedResponse = std::make_unique<SimpleAssetResponse>(

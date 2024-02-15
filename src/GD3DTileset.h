@@ -11,7 +11,9 @@
 #include "CesiumCreditSystem.h"
 #include "Cesium3DTilesetLoadFailureDetails.h"
 #include "CesiumIonServer.h"
-#include "godot_cpp/classes/http_request.hpp"
+#include <godot_cpp/classes/http_request.hpp>
+#include <CesiumAsync/Promise.h>
+#include <CesiumAsync/IAssetRequest.h>
 
 using namespace Cesium3DTilesSelection;
 using namespace godot;
@@ -85,8 +87,7 @@ namespace CesiumForGodot {
             const Cesium3DTilesSelection::ViewUpdateResult& currentResult
         );
 
-        void downloadTilesetJson(int p_status, int p_code, const PackedStringArray &headers, const PackedByteArray &p_data);
-
+        Vector< std::function<void(String response)>> callbacks;
     public:
         GD3DTileset();
         ~GD3DTileset();
@@ -205,8 +206,12 @@ namespace CesiumForGodot {
         {
             return _ion_server;
         }
-
+        
+        void downloadTilesetJson(int p_status, int p_code, const PackedStringArray &headers, const PackedByteArray &p_data);
+        
         void request(const String& url);
+
+        void loadCompletedCallback( const std::function<void(String &response)> &callback );
 
     protected:
         void DestroyTileset();

@@ -16,6 +16,9 @@
 #include "godot_cpp/classes/http_client.hpp"
 #include "godot_cpp/classes/http_request.hpp"
 #include "godot_cpp/classes/os.hpp"
+#include <godot_cpp/variant/string_name.hpp>
+#include "GodotAssetAccessor.h"
+#include "GodotExternals.h"
 
 namespace CesiumForGodot {
 
@@ -32,9 +35,20 @@ namespace CesiumForGodot {
 	    pRequest->request( url );
     }
 
-    void GD3DTileset::downloadTilesetJson( int p_status, int p_code, const PackedStringArray &headers, const PackedByteArray &p_data )
+    void GD3DTileset::downloadTilesetJson( int p_status, int p_code, const PackedStringArray &p_headers, const PackedByteArray &p_data )
     {
-	    WARN_PRINT( vformat( "status: %d code: %d data: %s", p_status, p_code, p_data.get_string_from_utf8() ) );
+        for (int i = 0; i < callbacks.size(); ++i)
+        {
+            callbacks[i](p_data.get_string_from_utf8());
+        }
+	    // emit_signal("tileset_request_completed" , p_status, p_code, p_headers, p_data);
+	    // WARN_PRINT( vformat( "status: %d code: %d data: %s", p_status, p_code, p_data.get_string_from_utf8() ) );
+    }
+
+    void GD3DTileset::loadCompletedCallback( const std::function<void(String &response)> &callback )
+    {
+	    callbacks.clear();
+	    callbacks.push_back( callback );
     }
 
     void GD3DTileset::RecreateTileset()

@@ -9,6 +9,54 @@
 
 #include <CesiumAsync/AsyncSystem.h>
 #include <CesiumAsync/IAssetAccessor.h>
+#include <CesiumAsync/IAssetResponse.h>
+#include <CesiumAsync/IAssetRequest.h>
+#include <CesiumAsync/HttpHeaders.h>
+
+using namespace CesiumAsync;
+namespace
+{
+    class GodotAssetResponse : public IAssetResponse
+    {
+    public:
+        GodotAssetResponse() {}
+
+        virtual uint16_t statusCode() const override { return _statusCode; }
+
+        virtual std::string contentType() const override { return _contentType; }
+
+        virtual const HttpHeaders& headers() const override { return _headers; }
+
+        virtual gsl::span<const std::byte> data() const override {
+            return this->_data;
+        }
+    private:
+        uint16_t _statusCode;
+        std::string _contentType;
+        HttpHeaders _headers;
+        std::vector<std::byte> _data;
+    };
+
+    class GodotAssetRequest : public IAssetRequest
+    {
+    public:
+        GodotAssetRequest() {}
+
+        virtual const std::string& method() const override { return _method; }
+
+        virtual const std::string& url() const override { return _url; }
+
+        virtual const HttpHeaders& headers() const override { return _headers; }
+
+        virtual const IAssetResponse* response() const override { return &_response; }
+
+    private:
+        std::string _method;
+        std::string _url;
+        HttpHeaders _headers;
+        GodotAssetResponse _response;
+    };
+}
 
 namespace CesiumForGodot {
 
