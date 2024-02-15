@@ -39,13 +39,13 @@ namespace CesiumForGodot {
         return cacheDBPath.utf8().get_data();
     }
 
-    const std::shared_ptr<IAssetAccessor>& getAssetAccessor() {
+    const std::shared_ptr<IAssetAccessor>& getAssetAccessor(GD3DTileset* tileset) {
         uint32_t RequestsPerCachePrune = CesiumRuntimeSettings::requestsPerCachePrune();
         static std::shared_ptr<CesiumAsync::IAssetAccessor> pAssetAccessor =
             std::make_shared<CesiumAsync::GunzipAssetAccessor>(
                 std::make_shared<CesiumAsync::CachingAssetAccessor>(
                   spdlog::default_logger(),
-                  std::make_shared<GodotAssetAccessor>(),
+                  std::make_shared<GodotAssetAccessor>(tileset),
                   getCacheDatabase(),
                   RequestsPerCachePrune));
         return pAssetAccessor;

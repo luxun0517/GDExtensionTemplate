@@ -99,7 +99,7 @@ namespace CesiumForGodot {
         GD3DTileset *tileset )
     {
         return TilesetExternals{ 
-            getAssetAccessor(),
+            getAssetAccessor(tileset),
             std::make_shared<GodotPrepareRendererResources>( tileset ),
             getAsyncSystem(),
             nullptr,

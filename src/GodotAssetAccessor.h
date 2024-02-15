@@ -5,6 +5,8 @@
 #ifndef GDCESIUM_GODOTASSETACCESSOR_H
 #define GDCESIUM_GODOTASSETACCESSOR_H
 
+#include "GD3DTileset.h"
+
 #include <CesiumAsync/AsyncSystem.h>
 #include <CesiumAsync/IAssetAccessor.h>
 
@@ -13,7 +15,7 @@ namespace CesiumForGodot {
    class GodotAssetAccessor : public CesiumAsync::IAssetAccessor
    {
     public:
-        GodotAssetAccessor();
+        GodotAssetAccessor(GD3DTileset* tileset);
 
         virtual CesiumAsync::Future<std::shared_ptr<CesiumAsync::IAssetRequest>> get(
             const CesiumAsync::AsyncSystem &asyncSystem,
@@ -36,6 +38,7 @@ namespace CesiumForGodot {
          const std::vector<CesiumAsync::IAssetAccessor::THeader>& headers);
        
         CesiumAsync::HttpHeaders _cesiumRequestHeaders;
+        GD3DTileset* _tileset;
     };
 
 } // Cesium

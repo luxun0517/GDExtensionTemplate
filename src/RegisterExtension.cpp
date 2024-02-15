@@ -11,6 +11,8 @@
 //#include "GDExtensionTemplate.h"
 // #include "TestRendering.h"
 #include "CesiumGeoreference.h"
+#include "TestTilesetJson.h"
+#include "CesiumIonServer.h"
 
 /// @file
 /// Register our classes with Godot.
@@ -29,9 +31,11 @@ namespace
             return;
         }
 
-        godot::ClassDB::register_class<CesiumGeoreference>();
+        ClassDB::register_class<CesiumGeoreference>();
         // godot::ClassDB::register_class<TestRendering>();
-        godot::ClassDB::register_class<CesiumForGodot::GD3DTileset>();
+        ClassDB::register_class<CesiumForGodot::GD3DTileset>();
+        ClassDB::register_class<TestTilesetJson>();
+        ClassDB::register_class<CesiumIonServer>();
         //        godot::ClassDB::register_class<ExampleRef>();
 //        godot::ClassDB::register_class<ExampleMin>();
 //        godot::ClassDB::register_class<Example>();

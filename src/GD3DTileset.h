@@ -10,6 +10,8 @@
 #include <Cesium3DTilesSelection/ViewUpdateResult.h>
 #include "CesiumCreditSystem.h"
 #include "Cesium3DTilesetLoadFailureDetails.h"
+#include "CesiumIonServer.h"
+#include "godot_cpp/classes/http_request.hpp"
 
 using namespace Cesium3DTilesSelection;
 using namespace godot;
@@ -24,8 +26,15 @@ namespace CesiumForGodot {
     class GD3DTileset : public Node3D {
         GDCLASS(GD3DTileset, Node3D);
 
+        HTTPRequest* pRequest = nullptr;
     private:
         String _url;
+
+        int _ionAssetID = 0;
+
+        String _ionAccessToken;
+
+        Ref<CesiumIonServer> _ion_server;
 
         float _maximumScreenSpaceError = 16.0;
         //预加载父节点
@@ -64,7 +73,7 @@ namespace CesiumForGodot {
 
         CesiumCreditSystem* _creditSystem;
 
-        TilesetSource TilesetSource = TilesetSource::FromUrl;
+        TilesetSource TilesetSource = TilesetSource::FromCesiumIon;
 
         void Start();
 
@@ -75,6 +84,8 @@ namespace CesiumForGodot {
         void updateLastViewUpdateResultState( 
             const Cesium3DTilesSelection::ViewUpdateResult& currentResult
         );
+
+        void downloadTilesetJson(int p_status, int p_code, const PackedStringArray &headers, const PackedByteArray &p_data);
 
     public:
         GD3DTileset();
@@ -176,6 +187,26 @@ namespace CesiumForGodot {
 		{
 			return _logSelectionStats;
 		}
+
+        void set_ionAssetID( int ionAssetID );
+        int get_ionAssetID()
+        {
+            return _ionAssetID;
+        }
+
+        void set_ionAccessToken( String ionAccessToken );
+        String get_ionAccessToken()
+        {
+            return _ionAccessToken;
+        }
+
+        void set_IonServer(const Ref<CesiumIonServer> &ion_server);
+        Ref<CesiumIonServer> get_IonServer()
+        {
+            return _ion_server;
+        }
+
+        void request(const String& url);
 
     protected:
         void DestroyTileset();

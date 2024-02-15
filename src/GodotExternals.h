@@ -5,6 +5,8 @@
 #ifndef GDCESIUM_GODOTEXTERNALS_H
 #define GDCESIUM_GODOTEXTERNALS_H
 
+#include "GD3DTileset.h"
+
 #include <memory>
 
 namespace CesiumAsync {
@@ -15,7 +17,7 @@ namespace CesiumAsync {
 
 namespace CesiumForGodot {
 
-    const std::shared_ptr<CesiumAsync::IAssetAccessor>& getAssetAccessor();
+    const std::shared_ptr<CesiumAsync::IAssetAccessor>& getAssetAccessor(GD3DTileset* tileset);
 
     std::shared_ptr<CesiumAsync::ICacheDatabase>& getCacheDatabase();
 

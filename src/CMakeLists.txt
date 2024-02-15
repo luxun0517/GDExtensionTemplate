@@ -38,9 +38,15 @@ target_sources( ${PROJECT_NAME}
         CesiumShaderProperties.cpp
 #        GodotPrepareRendererResources.h
 #        GodotPrepareRendererResources.cpp
+        CesiumIonServer.h
+        CesiumIonServer.cpp
         GD3DTileset.h
         GD3DTileset.cpp
 #        Cesium3DTilesetLoadFailureDetails.h
+
+
+        TestTilesetJson.h
+        TestTilesetJson.cpp
 
         RegisterExtension.cpp
 )

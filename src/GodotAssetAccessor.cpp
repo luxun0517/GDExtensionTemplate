@@ -4,7 +4,11 @@
 #pragma warning(disable : 4189)
 #include "GodotAssetAccessor.h"
 #include "Cesium.h"
+#include "Cesium3DTilesContent/GltfConverters.h"
 #include "godot_cpp/classes/file_access.hpp"
+#include "godot_cpp/classes/http_client.hpp"
+#include "godot_cpp/classes/http_request.hpp"
+
 #include <CesiumAsync/AsyncSystem.h>
 #include <CesiumAsync/IAssetResponse.h>
 #include <CesiumAsync/IAssetRequest.h>
@@ -119,11 +123,10 @@ namespace
 
         virtual gsl::span<const std::byte> data() const override
         {
-            // String url = this->_url.c_str();
-            // WARN_PRINT( vformat( "url: %s, data: %s", url, this->_data.get_string_from_utf8() ) );
-            return gsl::span<const std::byte>(
-               reinterpret_cast<const std::byte*>(this->_data.ptr()),
-               size_t(this->_data.size()));
+            gsl::span<const std::byte> responseData = gsl::span<const std::byte>(
+                reinterpret_cast<const std::byte*>(this->_data.ptr()),
+                this->_data.size());
+            return responseData;
         }
 
     private:
@@ -134,15 +137,14 @@ namespace
         uint16_t _statusCode;
         PackedByteArray _data;
     };
+
+    const std::string GodotFileAssetRequestResponse::getMethod = "GET";
+    const CesiumAsync::HttpHeaders GodotFileAssetRequestResponse::emptyHeaders{};
     
 }
 
 namespace
 {
-    
-    const std::string GodotFileAssetRequestResponse::getMethod = "GET";
-    const CesiumAsync::HttpHeaders GodotFileAssetRequestResponse::emptyHeaders{};
-    
     std::string convertFileUriToFilename(const std::string& url)
     {
         // According to the uriparser docs, both uriUriStringToWindowsFilenameA and
@@ -176,7 +178,8 @@ namespace
 
 namespace CesiumForGodot {
 
-	GodotAssetAccessor::GodotAssetAccessor() : _cesiumRequestHeaders() {
+	GodotAssetAccessor::GodotAssetAccessor(GD3DTileset* tileset) : _cesiumRequestHeaders() {
+	    this->_tileset = tileset;
         std::string version = Cesium::version + " " + Cesium::commit;
 
         String projectName = ProjectSettings::get_singleton()->get_setting("application/config/name");
@@ -185,7 +188,7 @@ namespace CesiumForGodot {
         //Project Name : cesium - godot, Engine:
         String osVersion = OS::get_singleton()->get_name();
         
-        this->_cesiumRequestHeaders.insert( { "X-Cesium-Client", "Cesium For Unity" } );
+        this->_cesiumRequestHeaders.insert( { "X-Cesium-Client", "Cesium For Godot" } );
         this->_cesiumRequestHeaders.insert( { "X-Cesium-Client-Version", version } );
         this->_cesiumRequestHeaders.insert(
             { "X-Cesium-Client-Project", projectName.utf8().get_data() } );
@@ -215,20 +218,49 @@ namespace CesiumForGodot {
 	        return getFromFile(asyncSystem, url, headers);
 	    }
 
-	    WARN_PRINT( "file is url" );
-	    auto pMockCompletedResponse = std::make_unique<SimpleAssetResponse>(
-          static_cast<uint16_t>(200),
-          "doesn't matter",
-          CesiumAsync::HttpHeaders{},
-          std::move(std::vector<std::byte>()));
+	    HttpHeaders cesiumRequestHeaders = this->_cesiumRequestHeaders;
+	
+	    return asyncSystem.createFuture<std::shared_ptr<CesiumAsync::IAssetRequest>>(
+	        [&url, &headers, &cesiumRequestHeaders, &tileset = this->_tileset](const auto& promise) {
+	        // Ref<HTTPClient> client = memnew( HTTPClient );
+	        // client->connect_to_host( url.c_str() );
+         //
+	        HttpHeaders requestHeaders = cesiumRequestHeaders;
+	        PackedStringArray _headers;
+	        for (const auto& header : headers)
+	        {
+	            requestHeaders.insert( header );
+	        }
+	        for (const auto& header : requestHeaders) {
+	            _headers.push_back( vformat( "%s : %s", header.first.c_str(), header.second.c_str() ) );
+            }
 
-	    auto pMockCompletedRequest = std::make_shared<SimpleAssetRequest>(
-            "GET",
-            "tileset.json",
-            CesiumAsync::HttpHeaders{},
-            std::move(pMockCompletedResponse));
-	    
-	    return asyncSystem.createResolvedFuture(std::shared_ptr<CesiumAsync::IAssetRequest>(pMockCompletedRequest));
+	        tileset->request( url.c_str() );
+
+	        // Error err = client->request( HTTPClient::METHOD_GET, url.c_str(), _headers );
+	        // if(err != OK)
+	        // {
+	        //     WARN_PRINT( "request failed" );
+	        // } else {
+         //        WARN_PRINT( "request successed" );	            
+	        // }
+	        
+	    } );
+
+	    // WARN_PRINT( "file is url" );
+	    // auto pMockCompletedResponse = std::make_unique<SimpleAssetResponse>(
+     //      static_cast<uint16_t>(200),
+     //      "doesn't matter",
+     //      CesiumAsync::HttpHeaders{},
+     //      std::move(std::vector<std::byte>()));
+     //
+	    // auto pMockCompletedRequest = std::make_shared<SimpleAssetRequest>(
+     //        "GET",
+     //        "tileset.json",
+     //        CesiumAsync::HttpHeaders{},
+     //        std::move(pMockCompletedResponse));
+	    //
+	    // return asyncSystem.createResolvedFuture(std::shared_ptr<CesiumAsync::IAssetRequest>(pMockCompletedRequest));
 	}
 
     CesiumAsync::Future<std::shared_ptr<CesiumAsync::IAssetRequest>>
@@ -238,12 +270,10 @@ namespace CesiumForGodot {
         const std::vector<CesiumAsync::IAssetAccessor::THeader>& headers)
 	{
 	    return asyncSystem.createFuture<std::shared_ptr<CesiumAsync::IAssetRequest>>(
-	        [url](const auto& promise) {
+	        [&url](const auto& promise) {
 
 	        std::string filename = convertFileUriToFilename(url);
             std::string path = url;
-
-	        WARN_PRINT( vformat( "filename : %s", filename.c_str() ) );    
 
 	        PackedByteArray data = FileAccess::get_file_as_bytes(filename.c_str());
 

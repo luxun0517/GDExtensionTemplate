@@ -50,6 +50,7 @@ namespace CesiumForGodot {
     
 	void CesiumGeoreference::set_originAuthority( CesiumGeoreferenceOriginAuthority value )
     {
+        if(!_isInitialized) { return;}
         this->_originAuthority = value;
         this->MoveOrigin();
     }
@@ -92,6 +93,7 @@ namespace CesiumForGodot {
 
     void CesiumGeoreference::set_scale( double value )
 	{
+        if(!_isInitialized) { return;}
 		this->_scale = value;
 		this->MoveOrigin();
 	}
@@ -142,9 +144,11 @@ namespace CesiumForGodot {
             this->_scale = 1e-8;
         }
 
+        this->UpdateOtherCoordinates();
+        
         Transform3D oldLocalToEcef = this->_localToEcef;
 
-        this->UpdateOtherCoordinates();
+        this->UpdateTransformations();
 
         if (oldLocalToEcef == this->_localToEcef)
 		{

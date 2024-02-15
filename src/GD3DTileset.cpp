@@ -13,16 +13,29 @@
 #include <spdlog/spdlog.h>
 #include "GodotPrepareRendererResources.h"
 #include "GodotTilesetExternals.h"
+#include "godot_cpp/classes/http_client.hpp"
+#include "godot_cpp/classes/http_request.hpp"
+#include "godot_cpp/classes/os.hpp"
 
 namespace CesiumForGodot {
 
 	GD3DTileset::GD3DTileset() {
-
+	    pRequest = memnew(HTTPRequest);
 	}
 
 	GD3DTileset::~GD3DTileset() {
 
 	}
+
+    void GD3DTileset::request( const String& url )
+    {
+	    pRequest->request( url );
+    }
+
+    void GD3DTileset::downloadTilesetJson( int p_status, int p_code, const PackedStringArray &headers, const PackedByteArray &p_data )
+    {
+	    WARN_PRINT( vformat( "status: %d code: %d data: %s", p_status, p_code, p_data.get_string_from_utf8() ) );
+    }
 
     void GD3DTileset::RecreateTileset()
     {
@@ -31,7 +44,6 @@ namespace CesiumForGodot {
 
     void GD3DTileset::DestroyTileset()
     {
-        WARN_PRINT( "DestroyTileset" );
         //// Remove any existing raster overlays
         //System::Array1<CesiumForUnity::CesiumRasterOverlay> overlays =
         //    tileset.gameObject().GetComponents<CesiumForUnity::CesiumRasterOverlay>();
@@ -40,13 +52,12 @@ namespace CesiumForGodot {
         //    CesiumForUnity::CesiumRasterOverlay overlay = overlays[i];
         //    overlay.RemoveFromTileset();
         //}
-      
-        // this->_pTileset.reset();
+        this->_pTileset.reset();
 	}
 		
 	/// <summary>
     /// 设置3dtileset url
-    /// </summary>   file:///C:/Users/10968/Desktop/WorkSpace/engine/cesium-godot/project/BatchedColors/tileset.json
+    /// </summary>
     /// <param name="url"></param>
     void GD3DTileset::set_url( String url )
     {
@@ -143,8 +154,27 @@ namespace CesiumForGodot {
 
     void GD3DTileset::set_logSelectionStats( bool logSelectionStats )
 	{
-        logSelectionStats = logSelectionStats;
+        _logSelectionStats = logSelectionStats;
 	}
+
+    void GD3DTileset::set_ionAssetID( int ionAssetID )
+    {
+        _ionAssetID = ionAssetID;
+    }
+
+    void GD3DTileset::set_ionAccessToken( String ionAccessToken )
+    {
+        _ionAccessToken = ionAccessToken;
+    }
+
+    void GD3DTileset::set_IonServer( const Ref<CesiumIonServer> &ion_server )
+    {
+	    if(_ion_server != ion_server)
+	    {
+	        _ion_server = ion_server;
+	        this->RecreateTileset();
+	    }
+    }
 
     void GD3DTileset::updateLastViewUpdateResultState(
         const ViewUpdateResult &currentResult
@@ -235,6 +265,7 @@ namespace CesiumForGodot {
          const ViewUpdateResult &updateResult =
              this->_pTileset->updateView( viewStates, static_cast<float>(delta) );
          this->updateLastViewUpdateResultState( updateResult );
+
          //
          // for ( Tile *pTile : updateResult.tilesFadingOut )
          // {
@@ -301,13 +332,13 @@ namespace CesiumForGodot {
         options.showCreditsOnScreen = this->_showCreditsOnScreen;
         options.loadErrorCallback =
             [this]( const TilesetLoadFailureDetails &details ) {
-                uint8_t typeValue = (uint8_t)details.type;
-                Cesium3DTilesetLoadFailureDetails godotDetails;
-                //godotDetails.tileset = *this;
-                //godotDetails.tileset = this;
-                godotDetails.type = Cesium3DTilesetLoadType( typeValue );
-                godotDetails.httpStatusCode = details.statusCode;
-                godotDetails.message = details.message.c_str();
+                // uint8_t typeValue = (uint8_t)details.type;
+                // Cesium3DTilesetLoadFailureDetails godotDetails;
+                // //godotDetails.tileset = *this;
+                // //godotDetails.tileset = this;
+                // godotDetails.type = Cesium3DTilesetLoadType( typeValue );
+                // godotDetails.httpStatusCode = details.statusCode;
+                // godotDetails.message = details.message.c_str();
 
 			    WARN_PRINT( "LoadErrorCallback" );
 		    };
@@ -340,7 +371,19 @@ namespace CesiumForGodot {
 
         if ( TilesetSource == TilesetSource::FromCesiumIon )
         {
-            WARN_PRINT( "FromCesiumIon" );
+            String ionAccessToken = this->_ion_server->getDefaultIonAccessToken();
+            std::string ionAssetEndpointUrl = this->_ion_server->getApiUrl().utf8().get_data();
+            if (*ionAssetEndpointUrl.rbegin() != '/')
+            {
+                ionAssetEndpointUrl += '/';
+            }
+
+            this->_pTileset = std::make_unique<Tileset>(
+                 createTilesetExternals(this),
+                 this->get_ionAssetID(),
+                 ionAccessToken.utf8().get_data(),
+                 options,
+                 ionAssetEndpointUrl);
         }
         else
         {
@@ -384,10 +427,17 @@ namespace CesiumForGodot {
         ClassDB::bind_method( D_METHOD( "set_url", "url"), &GD3DTileset::set_url);
         ClassDB::bind_method( D_METHOD( "get_url" ), &GD3DTileset::get_url);
 
+	    ClassDB::bind_method( D_METHOD( "set_IonServer", "ion_server" ), &GD3DTileset::set_IonServer );
+	    ClassDB::bind_method( D_METHOD( "get_IonServer" ), &GD3DTileset::get_IonServer );
+
+	    ClassDB::bind_method( D_METHOD( "set_ionAssetID", "ionAssetID" ), &GD3DTileset::set_ionAssetID );
+	    ClassDB::bind_method( D_METHOD( "get_ionAssetID" ), &GD3DTileset::get_ionAssetID );
+
 		// ADD_GROUP( "Renderer", "render_" );
         ADD_PROPERTY( PropertyInfo( Variant::STRING, "URL", PROPERTY_HINT_NONE ),
                 "set_url", "get_url" );
-  
+	    ADD_PROPERTY( PropertyInfo(Variant::INT, "Ion Asset ID", PROPERTY_HINT_NONE ), "set_ionAssetID", "get_ionAssetID" );
+	    ADD_PROPERTY( PropertyInfo(Variant::OBJECT, "Ion Server", PROPERTY_HINT_RESOURCE_TYPE, "CesiumIonServer"), "set_IonServer", "get_IonServer" );
   //       ADD_GROUP( "Level of Detail", "level of detail" );
 	}
 
@@ -406,6 +456,8 @@ namespace CesiumForGodot {
 			}
             case NOTIFICATION_ENTER_TREE:
 			{
+                add_child( pRequest );
+                pRequest->connect( "request_completed", callable_mp(this, &GD3DTileset::downloadTilesetJson) );
 				break;
 			}
             default:
@@ -414,35 +466,3 @@ namespace CesiumForGodot {
 	}
 
 } // Cesium
-
-///**
-// * If running in the editor, recurses into the editor scene tree to find the editor cameras and
-// * grabs the first one. The edited_scene_root is excluded in case the user already has a Camera3D in
-// * their scene.
-// */
-//void Terrain3D::_grab_camera()
-//{
-//    if ( Engine::get_singleton()->is_editor_hint() )
-//    {
-//        EditorScript temp_editor_script;
-//        EditorInterface *editor_interface = temp_editor_script.get_editor_interface();
-//        TypedArray<Camera3D> cam_array = TypedArray<Camera3D>();
-//        _find_cameras( editor_interface->get_editor_main_screen()->get_children(),
-//                       editor_interface->get_edited_scene_root(), cam_array );
-//        if ( !cam_array.is_empty() )
-//        {
-//            LOG( DEBUG, "Connecting to the first editor camera" );
-//            _camera = Object::cast_to<Camera3D>( cam_array[0] );
-//        }
-//    }
-//    else
-//    {
-//        LOG( DEBUG, "Connecting to the in-game viewport camera" );
-//        _camera = get_viewport()->get_camera_3d();
-//    }
-//    if ( !_camera )
-//    {
-//        set_process( false );
-//        LOG( ERROR, "Cannot find active camera. Stopping _process()" );
-//    }
-//}
