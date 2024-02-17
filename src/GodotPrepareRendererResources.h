@@ -6,6 +6,7 @@
 #define GODOT_GODOTPREPARERENDERERRESOURCES_H
 
 #include <godot_cpp/variant/rid.hpp>
+#include <godot_cpp/variant/vector3.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/classes/rendering_device.hpp>
 #include <godot_cpp/classes/mesh.hpp>
@@ -93,6 +94,10 @@ namespace CesiumForGodot {
             const CesiumRasterOverlays::RasterOverlayTile& rasterTile,
             void* pMainThreadRendererResources
         ) noexcept override;
+
+        void populateMeshDataArray(
+            TileLoadResult &tileLoadResult
+        );
 
     private:
         GD3DTileset* _tileset;

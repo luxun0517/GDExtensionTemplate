@@ -19,7 +19,9 @@ namespace
     class GodotAssetResponse : public IAssetResponse
     {
     public:
-        GodotAssetResponse() {}
+        GodotAssetResponse(uint16_t statusCode, PackedByteArray&& data)
+        : _statusCode( statusCode ),
+        _data( data ){}
 
         virtual uint16_t statusCode() const override { return _statusCode; }
 
@@ -28,19 +30,31 @@ namespace
         virtual const HttpHeaders& headers() const override { return _headers; }
 
         virtual gsl::span<const std::byte> data() const override {
-            return this->_data;
+            gsl::span<const std::byte> responseData = gsl::span<const std::byte>(
+             reinterpret_cast<const std::byte*>(this->_data.ptr()),
+             this->_data.size());
+            return responseData;
+            // return this->_data;
         }
     private:
         uint16_t _statusCode;
         std::string _contentType;
         HttpHeaders _headers;
-        std::vector<std::byte> _data;
+        PackedByteArray _data;
+        // std::vector<std::byte> _data;
     };
 
     class GodotAssetRequest : public IAssetRequest
     {
     public:
-        GodotAssetRequest() {}
+        GodotAssetRequest(
+            const HttpHeaders& headers,
+            const std::string &url,
+            uint16_t statusCode,
+            PackedByteArray data)
+                :_headers( headers ),
+                _url( url ),
+                _response( statusCode, std::move(data) ){}
 
         virtual const std::string& method() const override { return _method; }
 
@@ -51,7 +65,7 @@ namespace
         virtual const IAssetResponse* response() const override { return &_response; }
 
     private:
-        std::string _method;
+        std::string _method = "GET";
         std::string _url;
         HttpHeaders _headers;
         GodotAssetResponse _response;

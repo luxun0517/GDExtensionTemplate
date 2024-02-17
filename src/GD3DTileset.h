@@ -12,23 +12,27 @@
 #include "Cesium3DTilesetLoadFailureDetails.h"
 #include "CesiumIonServer.h"
 #include <godot_cpp/classes/http_request.hpp>
+#include <godot_cpp/classes/global_constants.hpp>
+#include <godot_cpp/core/binder_common.hpp>
+#include <godot_cpp/variant/variant.hpp>
 #include <CesiumAsync/Promise.h>
 #include <CesiumAsync/IAssetRequest.h>
 
 using namespace Cesium3DTilesSelection;
 using namespace godot;
 namespace CesiumForGodot {
-
-    enum class TilesetSource : uint8_t
-    {
-        FromCesiumIon,
-        FromUrl
-    };
-
     class GD3DTileset : public Node3D {
         GDCLASS(GD3DTileset, Node3D);
 
         HTTPRequest* pRequest = nullptr;
+    public:
+        enum TilesetSource
+        {
+            FromCesiumIon = 0,
+            FromUrl = 1
+        };
+
+
     private:
         String _url;
 
@@ -75,7 +79,7 @@ namespace CesiumForGodot {
 
         CesiumCreditSystem* _creditSystem;
 
-        TilesetSource TilesetSource = TilesetSource::FromCesiumIon;
+        TilesetSource tilesetSource = TilesetSource::FromUrl;
 
         void Start();
 
@@ -87,7 +91,7 @@ namespace CesiumForGodot {
             const Cesium3DTilesSelection::ViewUpdateResult& currentResult
         );
 
-        Vector< std::function<void(String response)>> callbacks;
+        Vector< std::function<void(uint16_t statusCode, PackedByteArray response)>> callbacks;
     public:
         GD3DTileset();
         ~GD3DTileset();
@@ -99,10 +103,17 @@ namespace CesiumForGodot {
             return _url;
         }
 
+        void set_tilesetSource(TilesetSource source);
+        TilesetSource get_tilesetSource()
+        {
+            return tilesetSource;
+        }
+
         CesiumCreditSystem* getCreditSystem() const
         {
             return this->_creditSystem;
-        };
+        }
+        
         void setCreditSystem( CesiumCreditSystem * NewCreditSystem );
 
         void set_maximumScreenSpaceError( float maximumScreenSpaceError );
@@ -209,9 +220,9 @@ namespace CesiumForGodot {
         
         void downloadTilesetJson(int p_status, int p_code, const PackedStringArray &headers, const PackedByteArray &p_data);
         
-        void request(const String& url);
+        void request(const String& url, const PackedStringArray &headers);
 
-        void loadCompletedCallback( const std::function<void(String &response)> &callback );
+        void loadCompletedCallback( const std::function<void(uint16_t statusCode, PackedByteArray &response)> &callback );
 
     protected:
         void DestroyTileset();
@@ -220,7 +231,6 @@ namespace CesiumForGodot {
 		static void _bind_methods();
 
     };
-
 } // Cesium
-
+VARIANT_ENUM_CAST(CesiumForGodot::GD3DTileset::TilesetSource);
 #endif //GDCESIUM_GD3DTILESET_H

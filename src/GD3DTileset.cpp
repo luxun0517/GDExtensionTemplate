@@ -13,10 +13,9 @@
 #include <spdlog/spdlog.h>
 #include "GodotPrepareRendererResources.h"
 #include "GodotTilesetExternals.h"
-#include "godot_cpp/classes/http_client.hpp"
-#include "godot_cpp/classes/http_request.hpp"
-#include "godot_cpp/classes/os.hpp"
+#include <godot_cpp/classes/http_request.hpp>
 #include <godot_cpp/variant/string_name.hpp>
+#include <godot_cpp/classes/global_constants.hpp>
 #include "GodotAssetAccessor.h"
 #include "GodotExternals.h"
 
@@ -30,22 +29,22 @@ namespace CesiumForGodot {
 
 	}
 
-    void GD3DTileset::request( const String& url )
+    void GD3DTileset::request( const String& url, const PackedStringArray &headers )
     {
-	    pRequest->request( url );
+	    pRequest->request( url, headers );
     }
 
     void GD3DTileset::downloadTilesetJson( int p_status, int p_code, const PackedStringArray &p_headers, const PackedByteArray &p_data )
     {
         for (int i = 0; i < callbacks.size(); ++i)
         {
-            callbacks[i](p_data.get_string_from_utf8());
+            callbacks[i](static_cast<uint16_t>(p_code), p_data);
         }
 	    // emit_signal("tileset_request_completed" , p_status, p_code, p_headers, p_data);
 	    // WARN_PRINT( vformat( "status: %d code: %d data: %s", p_status, p_code, p_data.get_string_from_utf8() ) );
     }
 
-    void GD3DTileset::loadCompletedCallback( const std::function<void(String &response)> &callback )
+    void GD3DTileset::loadCompletedCallback( const std::function<void(uint16_t statusCode, PackedByteArray &response)> &callback )
     {
 	    callbacks.clear();
 	    callbacks.push_back( callback );
@@ -354,7 +353,7 @@ namespace CesiumForGodot {
                 // godotDetails.httpStatusCode = details.statusCode;
                 // godotDetails.message = details.message.c_str();
 
-			    WARN_PRINT( "LoadErrorCallback" );
+			    WARN_PRINT( vformat( "LoadErrorCallback %s", details.message.c_str() ) );
 		    };
 
         options.mainThreadLoadingTimeLimit = 5.0f;
@@ -383,7 +382,7 @@ namespace CesiumForGodot {
 
         this->_lastUpdateResult = ViewUpdateResult();
 
-        if ( TilesetSource == TilesetSource::FromCesiumIon )
+        if ( tilesetSource == TilesetSource::FromCesiumIon )
         {
             String ionAccessToken = this->_ion_server->getDefaultIonAccessToken();
             std::string ionAssetEndpointUrl = this->_ion_server->getApiUrl().utf8().get_data();
@@ -437,6 +436,11 @@ namespace CesiumForGodot {
       
     }
 
+    void GD3DTileset::set_tilesetSource( TilesetSource source )
+    {
+        tilesetSource = source;
+    }
+
 	void GD3DTileset::_bind_methods() {
         ClassDB::bind_method( D_METHOD( "set_url", "url"), &GD3DTileset::set_url);
         ClassDB::bind_method( D_METHOD( "get_url" ), &GD3DTileset::get_url);
@@ -447,12 +451,20 @@ namespace CesiumForGodot {
 	    ClassDB::bind_method( D_METHOD( "set_ionAssetID", "ionAssetID" ), &GD3DTileset::set_ionAssetID );
 	    ClassDB::bind_method( D_METHOD( "get_ionAssetID" ), &GD3DTileset::get_ionAssetID );
 
+	    ClassDB::bind_method( D_METHOD( "set_tilesetSource", "source" ), &GD3DTileset::set_tilesetSource );
+	    ClassDB::bind_method( D_METHOD( "get_tilesetSource" ), &GD3DTileset::get_tilesetSource );
+
 		// ADD_GROUP( "Renderer", "render_" );
         ADD_PROPERTY( PropertyInfo( Variant::STRING, "URL", PROPERTY_HINT_NONE ),
                 "set_url", "get_url" );
+
+	    ADD_PROPERTY( PropertyInfo(Variant::INT, "tilesetSource", PROPERTY_HINT_ENUM, "FromCesiumIon, FromUrl"), "set_tilesetSource", "get_tilesetSource" );
+	    
 	    ADD_PROPERTY( PropertyInfo(Variant::INT, "Ion Asset ID", PROPERTY_HINT_NONE ), "set_ionAssetID", "get_ionAssetID" );
 	    ADD_PROPERTY( PropertyInfo(Variant::OBJECT, "Ion Server", PROPERTY_HINT_RESOURCE_TYPE, "CesiumIonServer"), "set_IonServer", "get_IonServer" );
   //       ADD_GROUP( "Level of Detail", "level of detail" );
+	    BIND_ENUM_CONSTANT(FromCesiumIon);
+	    BIND_ENUM_CONSTANT(FromUrl);
 	}
 
 	void GD3DTileset::_notification(int p_what) {

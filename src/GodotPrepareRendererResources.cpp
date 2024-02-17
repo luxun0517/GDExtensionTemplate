@@ -1,6 +1,7 @@
-//
+﻿//
 // Created by Harris.Lu on 2024/1/31.
 //
+#pragma warning (disable : 4189)
 
 #include "GodotPrepareRendererResources.h"
 #include "constants.h"
@@ -19,6 +20,7 @@
 #include <glm/gtc/matrix_inverse.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include "LoadGltfResult.h"
+#include "godot_cpp/classes/world3d.hpp"
 
 using namespace CesiumRasterOverlays;
 using namespace CesiumGltfContent;
@@ -65,7 +67,7 @@ namespace CesiumForGodot {
     //     return true;
     // }
 
-    void populateMeshDataArray(
+    void GodotPrepareRendererResources::populateMeshDataArray(
         TileLoadResult &tileLoadResult
     )
     {
@@ -77,54 +79,123 @@ namespace CesiumForGodot {
 
         pModel->forEachPrimitiveInScene(
             -1,
-            [pModel](
+            [this, pModel](
                 const CesiumGltf::Model &gltf,
                 const CesiumGltf::Node &node,
                 const CesiumGltf::Mesh &mesh,
                 const CesiumGltf::MeshPrimitive &primitive,
                 const glm::dmat4 &transform ) {
-                // uint64_t flags = RenderingServer::ARRAY_FLAG_COMPRESS_ATTRIBUTES;
-                //
-                // Array array;
-                // array.resize( godot::Mesh::ARRAY_MAX );
-                //
-                // godot::Mesh::PrimitiveType primitive_type = godot::Mesh::PRIMITIVE_TRIANGLES;
+                uint64_t flags = RenderingServer::ARRAY_FLAG_COMPRESS_ATTRIBUTES;
+                
+                Array arrays;
+                arrays.resize( godot::Mesh::ARRAY_MAX );
+                
+                godot::Mesh::PrimitiveType primitive_type = godot::Mesh::PRIMITIVE_TRIANGLES;
 
-      //          switch ( primitive.mode )
-      //          {
-      //              case MeshPrimitive::Mode::TRIANGLES:
-      //                  primitive_type = godot::Mesh::PRIMITIVE_TRIANGLES;
-						//break;
-      //              case MeshPrimitive::Mode::TRIANGLE_STRIP:
-      //              case MeshPrimitive::Mode::TRIANGLE_FAN:
-						//primitive_type = godot::Mesh::PRIMITIVE_TRIANGLE_STRIP;
-      //                  break;
-      //              case MeshPrimitive::Mode::POINTS:
-      //                  primitive_type = godot::Mesh::PRIMITIVE_POINTS;
-      //                  break;
-      //              case MeshPrimitive::Mode::LINES:
-      //              case MeshPrimitive::Mode::LINE_LOOP:
-						//primitive_type = godot::Mesh::PRIMITIVE_LINES;
-						//break;
-      //              case MeshPrimitive::Mode::LINE_STRIP:
-      //                  primitive_type = godot::Mesh::PRIMITIVE_LINE_STRIP;
-      //                  break;
-      //              default:
-      //                  break;
-      //          }
+                switch ( primitive.mode )
+                {
+                    case MeshPrimitive::Mode::TRIANGLES:
+                        primitive_type = godot::Mesh::PRIMITIVE_TRIANGLES;
+						break;
+                    case MeshPrimitive::Mode::TRIANGLE_STRIP:
+                    case MeshPrimitive::Mode::TRIANGLE_FAN:
+						primitive_type = godot::Mesh::PRIMITIVE_TRIANGLE_STRIP;
+                        break;
+                    case MeshPrimitive::Mode::POINTS:
+                        primitive_type = godot::Mesh::PRIMITIVE_POINTS;
+                        break;
+                    case MeshPrimitive::Mode::LINES:
+                    case MeshPrimitive::Mode::LINE_LOOP:
+						primitive_type = godot::Mesh::PRIMITIVE_LINES;
+						break;
+                    case MeshPrimitive::Mode::LINE_STRIP:
+                        primitive_type = godot::Mesh::PRIMITIVE_LINE_STRIP;
+                        break;
+                    default:
+                        break;
+                }
 
-      //          int32_t vertex_num = 0;
-      //          auto positionAccessorIt = primitive.attributes.find( "POSITION" );
-      //          if ( positionAccessorIt == primitive.attributes.end() )
-      //          {
-      //              // This primitive doesn't have a POSITION semantic, ignore it.
-      //              return;
-      //          }
+                int32_t vertex_num = 0;
+                auto positionAccessorIt = primitive.attributes.find( "POSITION" );
+                if ( positionAccessorIt == primitive.attributes.end() )
+                {
+                    // This primitive doesn't have a POSITION semantic, ignore it.
+                    return;
+                }
 
-      //          int32_t positionAccessorID = positionAccessorIt->second;
-      //          AccessorView<Vector3> positionView( gltf, positionAccessorID );
+                int32_t positionAccessorID = positionAccessorIt->second;
+                AccessorView<glm::vec3> positionView( gltf, positionAccessorID );
+                PackedVector3Array vertices;
+                vertices.resize( positionView.size() );
+                Vector3 *vertices_ptr = vertices.ptrw();
+                for (int i = 0; i < positionView.size(); ++i)
+                {
+                    vertices_ptr[i] = Vector3( positionView[i].x, positionView[i].y, positionView[i].z );
+                }
+                
+                arrays[godot::Mesh::ARRAY_VERTEX] = vertices;
 
+                //是否包含索引
+                if(primitive.indices < 0 || primitive.indices >= gltf.accessors.size())
+                {
+                    WARN_PRINT( "no indices" );
+                } else
+                {
+                    const Accessor& indexAccessorGltf = gltf.accessors[primitive.indices];
+                    if(indexAccessorGltf.componentType == Accessor::ComponentType::UNSIGNED_BYTE)
+                    {
+                        // AccessorView<uint8_t> indexAccessor(gltf, primitive.indices);
+                        WARN_PRINT( "UNSIGNED_BYTE" );
+                    } else if(indexAccessorGltf.componentType == Accessor::ComponentType::UNSIGNED_SHORT)
+                    {
+                        AccessorView<uint16_t> indexAccessor(gltf, primitive.indices);
 
+                        if(primitive_type == godot::Mesh::PRIMITIVE_TRIANGLES)
+                        {
+                            PackedInt32Array indices;
+                            indices.resize( indexAccessor.size() );
+                            for (int i = 0; i < indexAccessor.size(); ++i) {
+                                indices[i] = indexAccessor[i];
+                            }
+
+                            arrays[godot::Mesh::ARRAY_INDEX] = indices;
+                        }
+                     
+                    } else if(indexAccessorGltf.componentType == Accessor::ComponentType::UNSIGNED_INT)
+                    {
+                        WARN_PRINT( "UNSIGNED_INT" );
+                    } else
+                    {
+                        WARN_PRINT( ">>>>>>> " );
+                    }
+                }
+
+                RID _mesh = RS->mesh_create();
+                RS->mesh_add_surface_from_arrays(_mesh, RenderingServer::PRIMITIVE_TRIANGLES, arrays);
+                //创建材质
+                  RID _material = RS->material_create();
+                  RID _shader = RS->shader_create();
+
+                  RS->shader_set_code( _shader, R"(
+                    // Default 3D material shader.
+                
+                    shader_type spatial;
+                
+                    void vertex() {
+        	            ROUGHNESS = 0.3;
+                    }
+                
+                    void fragment() {
+        	            ALBEDO = vec3(1., 1., 0.);
+        	            ROUGHNESS = 0.2;
+        	            METALLIC = 1.;
+                    }
+                )" );
+                RS->material_set_shader( _material, _shader );
+                RS->mesh_surface_set_material( _mesh, 0, _material );
+                RID scenario = this->_tileset->get_world_3d()->get_scenario();
+                //实例化到场景中
+                RS->instance_create2(_mesh, scenario);
             });
     }
 
@@ -275,6 +346,37 @@ namespace CesiumForGodot {
         return numberOfPrimitives;
 	}
 
+    // void loadModel(
+    //     CesiumGltf::Model& pModel,
+    //     const glm::dmat4& transform)
+    // {
+    //    pModel.forEachPrimitiveInScene( -1, [pModel](const CesiumGltf::Model& gltf,
+    //            const CesiumGltf::Node& node,
+    //            const CesiumGltf::Mesh& mesh,
+    //            const CesiumGltf::MeshPrimitive& primitive,
+    //            const glm::dmat4& transform){
+    //
+    //             auto positionAccessorIt = primitive.attributes.find("POSITION");
+    //             if (positionAccessorIt == primitive.attributes.end()) {
+    //                // This primitive doesn't have a POSITION semantic, ignore it.
+    //                return;
+    //             }
+    //             int32_t positionAccessorID = positionAccessorIt->second;
+    //             const Accessor* pPositionAccessor = Model::getSafe(&pModel.accessors, positionAccessorID);
+    //             if (!pPositionAccessor) {
+    //                // Position accessor does not exist, so ignore this primitive.
+    //                return;
+    //             }
+    //             
+    //             AccessorView<Vector3> positionView(gltf, positionAccessorID);
+    //             WARN_PRINT( vformat( "position size: %d", positionView.size() ) );
+    //             for (uint32_t i = 0; i < positionView.size(); ++i) {
+    //                 WARN_PRINT( vformat( "position: %d", positionView[i] ) );
+    //             }
+    //        
+    //    });
+    // }
+
     GodotPrepareRendererResources::GodotPrepareRendererResources(
         GD3DTileset* tileset ) :
         _tileset( tileset ),
@@ -289,7 +391,6 @@ namespace CesiumForGodot {
             const glm::dmat4 &transform,
             const std::any &renderOptions )
     {
-        WARN_PRINT( "prepareInLoadThread" );
         CesiumGltf::Model* pModel = std::get_if<CesiumGltf::Model>(&tileLoadResult.contentKind);
         if ( !pModel )
         {
@@ -298,9 +399,9 @@ namespace CesiumForGodot {
             );
         }
 
-        //loadModel( *pModel, transform );
+        // loadModel( *pModel, transform );
 
-         int32_t numberOfPrimitives = countPrimitives( *pModel );
+        int32_t numberOfPrimitives = countPrimitives( *pModel );
 
         return asyncSystem.runInMainThread( [numberOfPrimitives]() {
              Vector<RID> _meshes;
@@ -309,9 +410,9 @@ namespace CesiumForGodot {
              return _meshes;
          })
         .thenInWorkerThread(
-            [asyncSystem, tileLoadResult = std::move( tileLoadResult )]( Vector<RID> _meshes ) mutable
+            [this, asyncSystem, tileLoadResult = std::move( tileLoadResult )]( Vector<RID> _meshes ) mutable
             {
-                populateMeshDataArray( tileLoadResult );
+                this->populateMeshDataArray( tileLoadResult );
                 return asyncSystem.createResolvedFuture(
                     TileLoadResultAndRenderResources{ std::move(tileLoadResult), nullptr });
             });

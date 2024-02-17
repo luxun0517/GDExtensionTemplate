@@ -3,6 +3,8 @@
 target_sources( ${PROJECT_NAME}
     PRIVATE
         constants.h
+        GodotLoggerSink.h
+        GodotLoggerSink.cpp
         Cesium.h
         Cesium.cpp
         GodotAssetAccessor.h

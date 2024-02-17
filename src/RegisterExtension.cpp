@@ -13,6 +13,9 @@
 #include "CesiumGeoreference.h"
 #include "TestTilesetJson.h"
 #include "CesiumIonServer.h"
+#include <Cesium3DTilesContent/registerAllTileContentTypes.h>
+#include <CesiumUtility/Tracing.h>
+#include "GodotLoggerSink.h"
 
 /// @file
 /// Register our classes with Godot.
@@ -30,7 +33,17 @@ namespace
         {
             return;
         }
-
+        Cesium3DTilesContent::registerAllTileContentTypes();
+        std::shared_ptr<spdlog::logger> pLogger = spdlog::default_logger();
+        pLogger->sinks() = {std::make_shared<GodotLoggerSink>()};
+        CESIUM_TRACE_INIT(
+         "cesium-trace-" +
+         std::to_string(std::chrono::time_point_cast<std::chrono::microseconds>(
+                            std::chrono::steady_clock::now())
+                            .time_since_epoch()
+                            .count()) +
+         ".json");
+        
         ClassDB::register_class<CesiumGeoreference>();
         // godot::ClassDB::register_class<TestRendering>();
         ClassDB::register_class<CesiumForGodot::GD3DTileset>();

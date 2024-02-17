@@ -103,7 +103,10 @@ namespace
 
         virtual const std::string& method() const { return getMethod; }
 
-        virtual const std::string& url() const { return _url; }
+        virtual const std::string& url() const
+        {
+            return _url;
+        }
 
         virtual const CesiumAsync::HttpHeaders& headers() const override { return emptyHeaders; }
 
@@ -118,6 +121,7 @@ namespace
             gsl::span<const std::byte> responseData = gsl::span<const std::byte>(
                 reinterpret_cast<const std::byte*>(this->_data.ptr()),
                 this->_data.size());
+            auto magic = std::string(reinterpret_cast<const char*>(responseData.data()), 4);
             return responseData;
         }
 
@@ -210,19 +214,52 @@ namespace CesiumForGodot {
 	        return getFromFile(asyncSystem, url, headers);
 	    }
 
-	    HttpHeaders cesiumRequestHeaders = this->_cesiumRequestHeaders;
-	 
-	    return asyncSystem.runInMainThread( [asyncSystem, url, &tileset = this->_tileset]() {
-	        tileset->request( url.c_str() );
+	    return asyncSystem.runInMainThread( [
+	        asyncSystem,
+	        url,
+	        &headers,
+	        &cesiumRequestHeaders = this->_cesiumRequestHeaders,
+	        &tileset = this->_tileset]() {
+
+	        HttpHeaders requestHeaders = cesiumRequestHeaders;
+             for (const auto& header : headers)
+             {
+                 WARN_PRINT( vformat( "%s : %s", header.first.c_str(), header.second.c_str() ) );
+                 requestHeaders.insert( header );
+             }
+
+	        PackedStringArray _headers;
+	        for (const auto& header : requestHeaders) {
+                _headers.push_back( vformat( "%s : %s", header.first.c_str(), header.second.c_str() ) );
+            }
+	        
+	        tileset->request( url.c_str(), _headers );
 
 	        auto promise = asyncSystem.createPromise<std::shared_ptr<IAssetRequest>>();
             auto future = promise.getFuture();
 
-	        tileset->loadCompletedCallback( [promise](String &response) {
-	            WARN_PRINT(  vformat( "response: %s ", response)  );
+	        tileset->loadCompletedCallback( [promise,
+	            url,
+	            headers = std::move(requestHeaders)](uint16_t statusCode, PackedByteArray &response) {
 
-	            promise.resolve(std::make_shared<GodotAssetRequest>());
-	        });
+	            promise.resolve(std::make_shared<GodotAssetRequest>(headers, url, statusCode, response));
+           });
+
+	        // tileset->loadCompletedCallback( [
+	        //     promise = std::move(promise),
+	        //     &url,
+	        //     &headers,
+	        //     &cesiumRequestHeaders](String &response) {
+	        //     // WARN_PRINT(  vformat( "response: %s ", response)  );
+         //
+	        //     HttpHeaders requestHeaders = cesiumRequestHeaders;
+         //        for (const auto& header : headers)
+         //        {
+         //           requestHeaders.insert( header );
+         //        }
+         //
+	        //     promise.resolve(std::make_shared<GodotAssetRequest>());
+	        // });
 	        // Callable callback = callable_mp( tileset, &GD3DTileset::requestTilesetCompleted );
 	        //
 	        //
@@ -281,20 +318,18 @@ namespace CesiumForGodot {
         const std::string& url,
         const std::vector<CesiumAsync::IAssetAccessor::THeader>& headers)
 	{
-	    return asyncSystem.createFuture<std::shared_ptr<CesiumAsync::IAssetRequest>>(
-	        [&url](const auto& promise) {
+	    auto promise = asyncSystem.createPromise<std::shared_ptr<IAssetRequest>>();
+	    auto future = promise.getFuture();
 
-	        std::string filename = convertFileUriToFilename(url);
-            std::string path = url;
-
-	        PackedByteArray data = FileAccess::get_file_as_bytes(filename.c_str());
-
-	        promise.resolve(std::make_shared<GodotFileAssetRequestResponse>(
-                std::move( path ),
-                200,
-                std::move(data)
-            ));
-	    });  
+	    std::string filename = convertFileUriToFilename(url);
+        std::string path = url;
+	    PackedByteArray data = FileAccess::get_file_as_bytes(filename.c_str());
+	    promise.resolve(std::make_shared<GodotFileAssetRequestResponse>(
+            std::move( path ),
+            200,
+            std::move(data)
+        ));
+	    return future;
 	}
 
     CesiumAsync::Future<std::shared_ptr<CesiumAsync::IAssetRequest>> GodotAssetAccessor::request(
